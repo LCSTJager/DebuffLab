@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DebuffLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0e0f13;--surface:#16181f;--surface2:#1e2029;--border:#2a2d3a;
+    --accent:#e8ff5a;--accent2:#ff5a5a;--accent3:#5ab4ff;
+    --buff:#5affb4;--hp:#ff8c5a;--text:#f0f0f0;--muted:#7a7f94;--radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px}
+  .logo{font-size:22px;font-weight:800;letter-spacing:-.5px}.logo span{color:var(--accent)}
+  .header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .layout{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+  .panel-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+  .btn{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0)}
+  .btn-primary{background:var(--accent);color:#0e0f13}.btn-primary:hover{background:#f0ff7a}
+  .btn-buff{background:var(--buff);color:#0e0f13}.btn-buff:hover{background:#7affcc}
+  .btn-danger{background:transparent;border:1px solid var(--accent2);color:var(--accent2)}.btn-danger:hover{background:var(--accent2);color:#fff}
+  .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-sm{font-size:11px;padding:5px 10px;border-radius:6px}
+  .char-list{display:flex;flex-direction:column;gap:8px}
+  .char-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center}
+  .char-item:hover{border-color:var(--accent3)}.char-item.active{border-color:var(--accent);background:#1f2210}
+  .char-item-info{flex:1}.char-item-name{font-weight:700;font-size:14px}
+  .char-item-score{font-family:'DM Mono',monospace;font-size:11px;margin-top:3px}
+  .char-item-actions{display:flex;gap:6px;margin-left:10px}
+  .main-area{display:flex;flex-direction:column;gap:20px}
+  .stat-bar-wrap{margin-bottom:6px}
+  .stat-bar-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .stat-label{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+  .stat-value{font-size:36px;font-weight:800;letter-spacing:-1px;transition:color .3s}
+  .stat-base{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+  .bar-track{height:10px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+  .bar-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1),background .3s}
+  .hp-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+  .hp-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .hp-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+  .hp-value{font-family:'DM Mono',monospace;font-size:20px;font-weight:700}
+  .hp-track{height:14px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+  .hp-fill{height:100%;border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1),background .3s}
+  .tabs{display:flex;gap:4px;margin-bottom:16px}
+  .tab{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;padding:7px 16px;border-radius:8px;border:1px solid transparent;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
+  .tab.active-debuff{background:#1f1212;border-color:var(--accent2);color:var(--accent2)}
+  .tab.active-buff{background:#0f1f18;border-color:var(--buff);color:var(--buff)}
+  .tab:hover:not(.active-debuff):not(.active-buff){color:var(--text);border-color:var(--border)}
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .dcard{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;transition:all .15s}
+  .dcard:hover{border-color:var(--muted)}.dcard.sel-debuff{border-color:var(--accent2);background:#1f1212}.dcard.sel-buff{border-color:var(--buff);background:#0f1f18}
+  .dcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .dcard-name{font-weight:700;font-size:14px;line-height:1.3}
+  .dcard-cost{font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap;font-weight:500;margin-top:2px}
+  .cneg{color:var(--accent2)}.cpos{color:var(--buff)}
+  .ctoggle{width:36px;height:20px;border-radius:99px;background:var(--surface);border:1px solid var(--border);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
+  .ctoggle::after{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:var(--muted);top:50%;left:3px;transform:translateY(-50%);transition:all .2s}
+  .ctoggle.on-debuff{background:#3a1010;border-color:var(--accent2)}.ctoggle.on-debuff::after{left:calc(100% - 16px);background:var(--accent2)}
+  .ctoggle.on-buff{background:#0f2a1e;border-color:var(--buff)}.ctoggle.on-buff::after{left:calc(100% - 16px);background:var(--buff)}
+  .modifiers{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .modifier-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;opacity:.4;transition:opacity .2s}
+  .modifier-row.enabled{opacity:1}.modifier-label{color:var(--text);flex:1}
+  .modifier-cost{font-family:'DM Mono',monospace;white-space:nowrap}
+  .mtoggle{width:28px;height:16px;border-radius:99px;background:var(--surface);border:1px solid var(--border);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
+  .mtoggle::after{content:'';position:absolute;width:10px;height:10px;border-radius:50%;background:var(--muted);top:50%;left:2px;transform:translateY(-50%);transition:all .2s}
+  .mtoggle.on-debuff{background:#3a1010;border-color:var(--accent2)}.mtoggle.on-debuff::after{left:calc(100% - 12px);background:var(--accent2)}
+  .mtoggle.on-buff{background:#0f2a1e;border-color:var(--buff)}.mtoggle.on-buff::after{left:calc(100% - 12px);background:var(--buff)}
+  .summary-rows{display:flex;flex-direction:column;gap:6px}
+  .summary-row{display:flex;justify-content:space-between;font-size:13px;font-family:'DM Mono',monospace;padding:8px 10px;border-radius:8px;background:var(--surface2)}
+  .summary-row.total{border:1px solid var(--accent);color:var(--accent);font-weight:700;font-size:15px}
+  .summary-row.total span:last-child{color:var(--accent)}
+  .hp-form{display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:center;margin-bottom:10px}
+  .event-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;padding-right:2px}
+  .event-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:8px;background:var(--surface2);font-size:13px;gap:10px}
+  .event-desc{flex:1;color:var(--text)}.event-val{font-family:'DM Mono',monospace;font-weight:700;white-space:nowrap}
+  .event-val.pos{color:var(--buff)}.event-val.neg{color:var(--accent2)}
+  .event-time{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
+  .event-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;transition:color .15s}
+  .event-del:hover{color:var(--accent2)}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:500px;max-height:82vh;overflow-y:auto}
+  .modal h2{font-size:20px;font-weight:800;margin-bottom:20px}
+  .form-group{margin-bottom:16px}
+  .form-label{display:block;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
+  .form-input:focus{border-color:var(--accent)}.form-input[type=number]{font-family:'DM Mono',monospace}
+  .mods-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+  .mod-item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+  .mod-item .form-input{padding:7px 10px;font-size:13px}
+  .icon-btn{background:transparent;border:1px solid var(--border);color:var(--accent2);border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .icon-btn:hover{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+  .flex-between{display:flex;justify-content:space-between;align-items:center}
+  .chip{font-size:10px;font-weight:700;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+  .empty{text-align:center;padding:32px 20px;color:var(--muted);font-size:13px;line-height:1.8}.empty-icon{font-size:28px;margin-bottom:8px}
+  .no-char{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--muted);border:2px dashed var(--border);border-radius:var(--radius);gap:12px}
+  .no-char-icon{font-size:48px}.no-char h3{font-size:18px;color:var(--text)}.no-char p{font-size:13px;line-height:1.7;max-width:300px}
+  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--surface2)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+  .notes-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;line-height:1.7;resize:vertical;min-height:160px;outline:none;transition:border-color .15s}
+  .notes-textarea:focus{border-color:var(--accent3);box-shadow:0 0 0 3px rgba(90,180,255,.08)}
+  .notes-textarea::placeholder{color:var(--muted)}
+  .notes-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}
+  .notes-count{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)}
+  .notes-saved{font-size:10px;font-family:'DM Mono',monospace;color:var(--buff);opacity:0;transition:opacity .4s}
+  .notes-hint{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:6px}
+  .char-note-preview{font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Debuff<span>Lab</span></div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="openBuffEditor()">✦ Gerenciar Buffs</button>
+    <button class="btn btn-ghost" onclick="openDebuffEditor()">⚙ Gerenciar Debuffs</button>
+    <span id="save-indicator" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;opacity:0;transition:opacity .4s">✓ salvo</span>
+    <button class="btn btn-primary" onclick="openNewChar()">+ Novo Personagem</button>
+  </div>
+</header>
+
+<div class="layout">
+  <div>
+    <div class="panel">
+      <div class="panel-title">Personagens <span id="char-count" class="chip">0</span></div>
+      <div class="char-list" id="char-list"><div class="empty"><div class="empty-icon">🧙</div>Nenhum personagem ainda.</div></div>
+    </div>
+  </div>
+  <div class="main-area" id="main-area">
+    <div class="no-char"><div class="no-char-icon">🎯</div><h3>Selecione um personagem</h3><p>Crie ou selecione um personagem para começar.</p></div>
+  </div>
+</div>
+
+<!-- MODAL: personagem -->
+<div class="modal-overlay" id="modal-char" style="display:none">
+  <div class="modal">
+    <h2 id="modal-char-title">Novo Personagem</h2>
+    <div class="form-group"><label class="form-label">Nome</label><input class="form-input" id="char-name-input" placeholder="Ex: Guerreiro das Sombras"></div>
+    <div class="form-group"><label class="form-label">Pontuação Base</label><input class="form-input" type="number" id="char-score-input" value="100"></div>
+    <div class="form-group"><label class="form-label">HP Máximo</label><input class="form-input" type="number" id="char-hp-input" value="100"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-char')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveChar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: debuffs -->
+<div class="modal-overlay" id="modal-debuffs" style="display:none">
+  <div class="modal">
+    <h2>Gerenciar Debuffs</h2>
+    <div id="debuffs-editor-list" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px;max-height:52vh;overflow-y:auto;padding-right:4px"></div>
+    <button class="btn btn-ghost" style="width:100%" onclick="addNewDebuffEntry()">+ Adicionar Debuff</button>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-debuffs')">Cancelar</button><button class="btn btn-primary" onclick="saveDebuffs()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: buffs -->
+<div class="modal-overlay" id="modal-buffs" style="display:none">
+  <div class="modal">
+    <h2>Gerenciar Buffs</h2>
+    <div id="buffs-editor-list" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px;max-height:52vh;overflow-y:auto;padding-right:4px"></div>
+    <button class="btn btn-ghost" style="width:100%" onclick="addNewBuffEntry()">+ Adicionar Buff</button>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-buffs')">Cancelar</button><button class="btn btn-buff" onclick="saveBuffs()">Salvar</button></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'debufflab_v2';
+
+const DEFAULT_DEBUFFS = [
+  {id:'d1',name:'Cego',baseCost:10,modifiers:[{id:'m1_d1',label:'Permanente',cost:5},{id:'m2_d1',label:'Afeta magia também',cost:5}]},
+  {id:'d2',name:'Lentidão',baseCost:8,modifiers:[{id:'m1_d2',label:'Grave (-75% velocidade)',cost:7},{id:'m2_d2',label:'Imobilizado',cost:12}]},
+  {id:'d3',name:'Envenenado',baseCost:12,modifiers:[{id:'m1_d3',label:'Veneno forte (+dano)',cost:8},{id:'m2_d3',label:'Incurável',cost:10}]},
+  {id:'d4',name:'Maldição de Ataque',baseCost:15,modifiers:[{id:'m1_d4',label:'Afeta habilidades especiais',cost:10}]},
+  {id:'d5',name:'Fraqueza',baseCost:7,modifiers:[{id:'m1_d5',label:'Extrema (-50% força)',cost:8},{id:'m2_d5',label:'Permanente',cost:6},{id:'m3_d5',label:'Afeta toda a party',cost:15}]},
+  {id:'d6',name:'Silenciado',baseCost:9,modifiers:[{id:'m1_d6',label:'Não pode comunicar',cost:5}]},
+];
+const DEFAULT_BUFFS = [
+  {id:'b1',name:'Bem Descansado',baseCost:10,modifiers:[{id:'mb1_b1',label:'Sono profundo',cost:5}]},
+  {id:'b2',name:'Bênção Divina',baseCost:15,modifiers:[{id:'mb1_b2',label:'Bênção maior',cost:10},{id:'mb2_b2',label:'Permanente',cost:8}]},
+  {id:'b3',name:'Poção de Força',baseCost:12,modifiers:[{id:'mb1_b3',label:'Poção aprimorada',cost:7}]},
+  {id:'b4',name:'Inspiração',baseCost:8,modifiers:[{id:'mb1_b4',label:'Inspiração lendária',cost:12}]},
+  {id:'b5',name:'Proteção Mágica',baseCost:11,modifiers:[{id:'mb1_b5',label:'Escudo total',cost:9},{id:'mb2_b5',label:'Afeta aliados próximos',cost:14}]},
+];
+
+function loadState(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)return JSON.parse(r)}catch(e){}return null}
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({characters:state.characters,activeCharId:state.activeCharId,debuffs:state.debuffs,buffs:state.buffs,selections:state.selections,hpEvents:state.hpEvents,activeTab:state.activeTab,notes:state.notes}));
+    const ind=document.getElementById('save-indicator');
+    if(ind){ind.style.opacity='1';setTimeout(()=>ind.style.opacity='0',1400)}
+  }catch(e){}
+}
+
+const saved=loadState();
+let state={
+  characters:saved?.characters??[],activeCharId:saved?.activeCharId??null,
+  debuffs:saved?.debuffs??DEFAULT_DEBUFFS,buffs:saved?.buffs??DEFAULT_BUFFS,
+  selections:saved?.selections??{},hpEvents:saved?.hpEvents??{},notes:saved?.notes??{},
+  activeTab:saved?.activeTab??'debuff',
+};
+
+function uid(){return '_'+Math.random().toString(36).slice(2,9)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function getSel(cid){if(!state.selections[cid])state.selections[cid]={};return state.selections[cid]}
+function getEvts(cid){if(!state.hpEvents[cid])state.hpEvents[cid]=[];return state.hpEvents[cid]}
+
+function calcChar(char){
+  const sel=getSel(char.id);
+  let deducted=0,buffed=0,debuffLines=[],buffLines=[];
+  state.debuffs.forEach(d=>{
+    const e=sel[d.id];if(!e||!e.active)return;
+    let cost=d.baseCost,mods=0;
+    (d.modifiers||[]).forEach(m=>{if(e.mods&&e.mods[m.id]){cost+=m.cost;mods+=m.cost}});
+    deducted+=cost;debuffLines.push({name:d.name,base:d.baseCost,mods,total:cost});
+  });
+  state.buffs.forEach(b=>{
+    const e=sel[b.id];if(!e||!e.active)return;
+    let gain=b.baseCost,mods=0;
+    (b.modifiers||[]).forEach(m=>{if(e.mods&&e.mods[m.id]){gain+=m.cost;mods+=m.cost}});
+    buffed+=gain;buffLines.push({name:b.name,base:b.baseCost,mods,total:gain});
+  });
+  const maxHp=char.maxHp??100;
+  const hpDelta=getEvts(char.id).reduce((a,ev)=>a+ev.value,0);
+  const currentHp=Math.max(0,Math.min(maxHp,maxHp+hpDelta));
+  return{score:char.base-deducted+buffed,deducted,buffed,debuffLines,buffLines,currentHp,maxHp};
+}
+
+function scol(score,base){const p=score/base;return p>.6?'var(--buff)':p>.3?'var(--accent)':'var(--accent2)'}
+function hcol(hp,max){const p=hp/max;return p>.6?'var(--buff)':p>.3?'var(--hp)':'var(--accent2)'}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+
+// ── Personagens ──
+let editingCharId=null;
+function openNewChar(){
+  editingCharId=null;
+  document.getElementById('modal-char-title').textContent='Novo Personagem';
+  document.getElementById('char-name-input').value='';
+  document.getElementById('char-score-input').value='100';
+  document.getElementById('char-hp-input').value='100';
+  document.getElementById('modal-char').style.display='flex';
+  setTimeout(()=>document.getElementById('char-name-input').focus(),50);
+}
+function openEditChar(id){
+  const c=state.characters.find(c=>c.id===id);if(!c)return;
+  editingCharId=id;
+  document.getElementById('modal-char-title').textContent='Editar Personagem';
+  document.getElementById('char-name-input').value=c.name;
+  document.getElementById('char-score-input').value=c.base;
+  document.getElementById('char-hp-input').value=c.maxHp??100;
+  document.getElementById('modal-char').style.display='flex';
+}
+function saveChar(){
+  const name=document.getElementById('char-name-input').value.trim();
+  const base=parseInt(document.getElementById('char-score-input').value)||100;
+  const maxHp=parseInt(document.getElementById('char-hp-input').value)||100;
+  if(!name){document.getElementById('char-name-input').focus();return}
+  if(editingCharId){const c=state.characters.find(c=>c.id===editingCharId);c.name=name;c.base=base;c.maxHp=maxHp}
+  else{const c={id:uid(),name,base,maxHp};state.characters.push(c);state.activeCharId=c.id}
+  saveState();closeModal('modal-char');renderAll();
+}
+function deleteChar(id){
+  if(!confirm('Remover personagem?'))return;
+  if(state.activeCharId===id){
+    const idx=state.characters.findIndex(c=>c.id===id);
+    const nxt=state.characters[idx+1]||state.characters[idx-1]||null;
+    state.activeCharId=nxt?nxt.id:null;
+  }
+  state.characters=state.characters.filter(c=>c.id!==id);
+  delete state.selections[id];delete state.hpEvents[id];
+  saveState();renderAll();
+}
+function setActive(id){state.activeCharId=id;saveState();renderAll()}
+
+// ── Editor genérico ──
+let tempDebuffs=[],tempBuffs=[];
+function openDebuffEditor(){tempDebuffs=JSON.parse(JSON.stringify(state.debuffs));renderEditor('debuffs-editor-list',tempDebuffs,'debuff');document.getElementById('modal-debuffs').style.display='flex'}
+function openBuffEditor(){tempBuffs=JSON.parse(JSON.stringify(state.buffs));renderEditor('buffs-editor-list',tempBuffs,'buff');document.getElementById('modal-buffs').style.display='flex'}
+function addNewDebuffEntry(){tempDebuffs.push({id:uid(),name:'',baseCost:10,modifiers:[]});renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
+function addNewBuffEntry(){tempBuffs.push({id:uid(),name:'',baseCost:10,modifiers:[]});renderEditor('buffs-editor-list',tempBuffs,'buff')}
+function removeDebuffEntry(i){tempDebuffs.splice(i,1);renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
+function removeBuffEntry(i){tempBuffs.splice(i,1);renderEditor('buffs-editor-list',tempBuffs,'buff')}
+function addDebuffMod(di){tempDebuffs[di].modifiers.push({id:uid(),label:'',cost:5});renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
+function addBuffMod(di){tempBuffs[di].modifiers.push({id:uid(),label:'',cost:5});renderEditor('buffs-editor-list',tempBuffs,'buff')}
+function removeDebuffMod(di,mi){tempDebuffs[di].modifiers.splice(mi,1);renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
+function removeBuffMod(di,mi){tempBuffs[di].modifiers.splice(mi,1);renderEditor('buffs-editor-list',tempBuffs,'buff')}
+
+function renderEditor(cid,arr,type){
+  const el=document.getElementById(cid);
+  const vr=type==='buff'?'tempBuffs':'tempDebuffs';
+  const rfn=type==='buff'?'removeBuffEntry':'removeDebuffEntry';
+  const amfn=type==='buff'?'addBuffMod':'addDebuffMod';
+  const rmfn=type==='buff'?'removeBuffMod':'removeDebuffMod';
+  if(!arr.length){el.innerHTML=`<div class="empty"><div class="empty-icon">${type==='buff'?'✦':'💀'}</div>Nenhum ${type} ainda.</div>`;return}
+  el.innerHTML=arr.map((d,di)=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <input class="form-input" style="flex:1" value="${esc(d.name)}" placeholder="Nome do ${type}" oninput="${vr}[${di}].name=this.value">
+        <input class="form-input" type="number" style="width:80px" value="${d.baseCost}" oninput="${vr}[${di}].baseCost=parseInt(this.value)||0">
+        <button class="icon-btn" onclick="${rfn}(${di})">✕</button>
+      </div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Modificadores</div>
+      <div class="mods-list">${(d.modifiers||[]).map((m,mi)=>`
+        <div class="mod-item">
+          <input class="form-input" value="${esc(m.label)}" placeholder="Nome do modificador" oninput="${vr}[${di}].modifiers[${mi}].label=this.value">
+          <input class="form-input" type="number" style="width:72px" value="${m.cost}" oninput="${vr}[${di}].modifiers[${mi}].cost=parseInt(this.value)||0">
+          <button class="icon-btn" onclick="${rmfn}(${di},${mi})">✕</button>
+        </div>`).join('')}</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="${amfn}(${di})">+ Modificador</button>
+    </div>`).join('');
+}
+
+function cleanEntries(arr){
+  return arr.filter(d=>d.name.trim()).map(d=>{
+    if(!d.id)d.id=uid();
+    d.modifiers=(d.modifiers||[]).filter(m=>m.label.trim()).map(m=>({...m,id:m.id||uid()}));
+    return d;
+  });
+}
+function pruneSelections(validIds){
+  Object.keys(state.selections).forEach(cid=>{
+    Object.keys(state.selections[cid]).forEach(eid=>{if(!validIds.has(eid))delete state.selections[cid][eid]});
+  });
+}
+function saveDebuffs(){
+  const c=cleanEntries(tempDebuffs);
+  pruneSelections(new Set([...c.map(d=>d.id),...state.buffs.map(b=>b.id)]));
+  state.debuffs=c;saveState();closeModal('modal-debuffs');renderAll();
+}
+function saveBuffs(){
+  const c=cleanEntries(tempBuffs);
+  pruneSelections(new Set([...state.debuffs.map(d=>d.id),...c.map(b=>b.id)]));
+  state.buffs=c;saveState();closeModal('modal-buffs');renderAll();
+}
+
+// ── Toggles ──
+function toggleEntry(charId,entryId){
+  const sel=getSel(charId);
+  if(!sel[entryId])sel[entryId]={active:false,mods:{}};
+  sel[entryId].active=!sel[entryId].active;
+  saveState();renderMain();
+}
+function toggleMod(charId,entryId,modId){
+  const sel=getSel(charId);
+  if(!sel[entryId])sel[entryId]={active:true,mods:{}};
+  if(!sel[entryId].mods)sel[entryId].mods={};
+  sel[entryId].mods[modId]=!sel[entryId].mods[modId];
+  saveState();renderMain();
+}
+
+// ── Eventos HP ──
+function addHpEvent(charId){
+  const de=document.getElementById('hp-event-desc');
+  const ve=document.getElementById('hp-event-val');
+  const desc=de.value.trim();
+  const value=parseInt(ve.value);
+  if(!desc||isNaN(value)||value===0){(!desc?de:ve).focus();return}
+  getEvts(charId).unshift({id:uid(),desc,value,ts:Date.now()});
+  de.value='';ve.value='';
+  saveState();renderMain();
+}
+function removeHpEvent(charId,eventId){
+  if(!state.hpEvents[charId])return;
+  state.hpEvents[charId]=state.hpEvents[charId].filter(e=>e.id!==eventId);
+  saveState();renderMain();
+}
+
+// ── Render ──
+function closeModal(id){document.getElementById(id).style.display='none'}
+function renderAll(){renderCharList();renderMain()}
+
+function renderCharList(){
+  const el=document.getElementById('char-list');
+  document.getElementById('char-count').textContent=state.characters.length;
+  if(!state.characters.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🧙</div>Nenhum personagem ainda.</div>`;return}
+  el.innerHTML=state.characters.map(c=>{
+    const{score,currentHp,maxHp}=calcChar(c);
+    const isAct=c.id===state.activeCharId;
+    return`<div class="char-item ${isAct?'active':''}" onclick="setActive('${c.id}')">
+      <div class="char-item-info">
+        <div class="char-item-name">${esc(c.name)}</div>
+        <div class="char-item-score">
+          <span style="color:${scol(score,c.base)}">${score} pts</span> &nbsp;·&nbsp;
+          <span style="color:${hcol(currentHp,maxHp)}">${currentHp}/${maxHp} HP</span>
+        </div>
+        ${(state.notes[c.id]??'').trim()?`<div class="char-note-preview">📝 ${esc((state.notes[c.id]??'').trim().slice(0,50))}${(state.notes[c.id]??'').length>50?'…':''}</div>`:''}
+      </div>
+      <div class="char-item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditChar('${c.id}')">✎</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteChar('${c.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Notas ──
+function saveNote(charId){
+  const ta=document.getElementById('notes-ta-'+charId);
+  if(!ta)return;
+  state.notes[charId]=ta.value;
+  saveState();
+  const saved=document.getElementById('notes-saved-'+charId);
+  if(saved){saved.style.opacity='1';setTimeout(()=>saved.style.opacity='0',1600)}
+}
+function updateNoteCount(charId){
+  const ta=document.getElementById('notes-ta-'+charId);
+  const el=document.getElementById('notes-count-'+charId);
+  if(ta&&el)el.textContent=ta.value.length+' caracteres';
+}
+
+function renderCards(list,type,charId){
+  const sel=getSel(charId);
+  if(!list.length)return`<div class="empty"><div class="empty-icon">${type==='buff'?'✦':'💀'}</div>Nenhum ${type} cadastrado.</div>`;
+  const sign=type==='buff'?'+':'−';
+  const ccls=type==='buff'?'cpos':'cneg';
+  return`<div class="card-grid">${list.map(d=>{
+    const e=sel[d.id]||{active:false,mods:{}};
+    const on=!!e.active;
+    const sc=on?(type==='buff'?'sel-buff':'sel-debuff'):'';
+    const tc=on?(type==='buff'?'on-buff':'on-debuff'):'';
+    return`<div class="dcard ${sc}">
+      <div class="dcard-top">
+        <div>
+          <div class="dcard-name">${esc(d.name)}</div>
+          <div class="dcard-cost ${ccls}">${sign}${d.baseCost} pts base</div>
+        </div>
+        <div class="ctoggle ${tc}" onclick="toggleEntry('${charId}','${d.id}')"></div>
+      </div>
+      ${d.modifiers&&d.modifiers.length?`<div class="modifiers">${d.modifiers.map(m=>{
+        const mon=!!(e.mods&&e.mods[m.id]);
+        const mtc=mon?(type==='buff'?'on-buff':'on-debuff'):'';
+        return`<div class="modifier-row ${on&&mon?'enabled':''}">
+          <div class="modifier-label">${esc(m.label)}</div>
+          <div class="modifier-cost ${ccls}">+${m.cost} pts</div>
+          <div class="mtoggle ${mtc}" onclick="${on?`toggleMod('${charId}','${d.id}','${m.id}')`:``}"></div>
+        </div>`;
+      }).join('')}</div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderMain(){
+  const area=document.getElementById('main-area');
+  const char=state.characters.find(c=>c.id===state.activeCharId);
+  if(!char){area.innerHTML=`<div class="no-char"><div class="no-char-icon">🎯</div><h3>Selecione um personagem</h3><p>Crie ou selecione um personagem para começar.</p></div>`;return}
+
+  const{score,deducted,buffed,debuffLines,buffLines,currentHp,maxHp}=calcChar(char);
+  const hpPct=Math.max(0,Math.min(100,(currentHp/maxHp)*100));
+  const spct=Math.max(0,Math.min(100,(score/char.base)*100));
+  const sc=scol(score,char.base);
+  const hc=hcol(currentHp,maxHp);
+  const evts=getEvts(char.id);
+  const tab=state.activeTab;
+  const hasLines=debuffLines.length||buffLines.length;
+
+  area.innerHTML=`
+    <div class="panel">
+      <div class="flex-between" style="margin-bottom:18px">
+        <div>
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Personagem ativo</div>
+          <div style="font-size:22px;font-weight:800">${esc(char.name)}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openEditChar('${char.id}')">✎ Editar</button>
+      </div>
+      <div class="stat-bar-wrap">
+        <div class="stat-bar-header">
+          <div><div class="stat-label">Pontuação Final</div><div class="stat-value" style="color:${sc}">${score}</div></div>
+          <div style="text-align:right;display:flex;flex-direction:column;gap:2px">
+            <div class="stat-base">Base: ${char.base}</div>
+            ${deducted?`<div class="stat-base" style="color:var(--accent2)">−${deducted} debuffs</div>`:''}
+            ${buffed?`<div class="stat-base" style="color:var(--buff)">+${buffed} buffs</div>`:''}
+          </div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${spct}%;background:${sc}"></div></div>
+      </div>
+      <div class="hp-section">
+        <div class="stat-bar-header">
+          <div>
+            <div class="stat-label">❤ HP</div>
+            <div class="stat-value" style="color:var(--accent3)">${currentHp}<span style="font-size:16px;font-weight:400;color:var(--muted)"> / ${maxHp}</span></div>
+          </div>
+        </div>
+        <div class="hp-track"><div class="hp-fill" style="width:${hpPct}%;background:var(--accent3)"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab ${tab==='debuff'?'active-debuff':''}" onclick="switchTab('debuff')">
+          💀 Debuffs${debuffLines.length?` <span style="font-size:10px;color:var(--accent2);margin-left:4px">(${debuffLines.length})</span>`:''}
+        </button>
+        <button class="tab ${tab==='buff'?'active-buff':''}" onclick="switchTab('buff')">
+          ✦ Buffs${buffLines.length?` <span style="font-size:10px;color:var(--buff);margin-left:4px">(${buffLines.length})</span>`:''}
+        </button>
+      </div>
+      ${tab==='debuff'?renderCards(state.debuffs,'debuff',char.id):renderCards(state.buffs,'buff',char.id)}
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">❤ Registro de Eventos de HP <span class="chip">${evts.length} evento${evts.length!==1?'s':''}</span></div>
+      <div class="hp-form">
+        <input class="form-input" id="hp-event-desc" placeholder="Ex: Rolou dado 1, recebeu flecha, tomou poção..." onkeydown="if(event.key==='Enter')addHpEvent('${char.id}')">
+        <input class="form-input" type="number" id="hp-event-val" placeholder="±pts" style="font-family:'DM Mono',monospace;text-align:center" onkeydown="if(event.key==='Enter')addHpEvent('${char.id}')">
+        <button class="btn btn-ghost" onclick="addHpEvent('${char.id}')">Registrar</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:14px">Negativo = dano &nbsp;·&nbsp; Positivo = cura &nbsp;·&nbsp; Ex: −10 ou 20</div>
+      ${evts.length===0
+        ?`<div class="empty" style="padding:20px 0"><div class="empty-icon">📋</div>Nenhum evento registrado ainda.</div>`
+        :`<div class="event-list">${evts.map(e=>`
+          <div class="event-item">
+            <div class="event-desc">${esc(e.desc)}</div>
+            <div class="event-val ${e.value>=0?'pos':'neg'}">${e.value>=0?'+':''}${e.value} HP</div>
+            <div class="event-time">${fmtTime(e.ts)}</div>
+            <button class="event-del" onclick="removeHpEvent('${char.id}','${e.id}')">✕</button>
+          </div>`).join('')}</div>`}
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        📝 Notas do Personagem
+        ${(state.notes[char.id]??'').length>0?`<span class="chip">${(state.notes[char.id]??'').length} car.</span>`:''}
+      </div>
+      <textarea
+        class="notes-textarea"
+        id="notes-ta-${char.id}"
+        placeholder="Escreva livremente: história do personagem, estratégias de sessão, itens encontrados, aliados, observações importantes..."
+        oninput="updateNoteCount('${char.id}')"
+        onblur="saveNote('${char.id}')"
+        onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='s'){event.preventDefault();saveNote('${char.id}')}"
+      >${esc(state.notes[char.id]??'')}</textarea>
+      <div class="notes-hint">Salva automaticamente ao perder foco · Ctrl+S para salvar manualmente</div>
+      <div class="notes-footer">
+        <span class="notes-count" id="notes-count-${char.id}">${(state.notes[char.id]??'').length} caracteres</span>
+        <span class="notes-saved" id="notes-saved-${char.id}">✓ salvo</span>
+        <button class="btn btn-ghost btn-sm" onclick="saveNote('${char.id}')">💾 Salvar</button>
+      </div>
+    </div>
+
+    ${hasLines?`
+    <div class="panel">
+      <div class="panel-title">Resumo do cálculo</div>
+      <div class="summary-rows">
+        <div class="summary-row"><span>Pontuação base</span><span style="color:var(--muted)">${char.base} pts</span></div>
+        ${debuffLines.map(l=>`<div class="summary-row"><span style="color:var(--accent2)">↓ ${esc(l.name)}${l.mods>0?` <span style="font-size:10px;color:var(--muted)">(+${l.mods} mods)</span>`:''}</span><span style="color:var(--accent2)">−${l.total} pts</span></div>`).join('')}
+        ${buffLines.map(l=>`<div class="summary-row"><span style="color:var(--buff)">↑ ${esc(l.name)}${l.mods>0?` <span style="font-size:10px;color:var(--muted)">(+${l.mods} mods)</span>`:''}</span><span style="color:var(--buff)">+${l.total} pts</span></div>`).join('')}
+        <div class="summary-row total"><span>PONTUAÇÃO FINAL</span><span>${score} pts</span></div>
+      </div>
+    </div>`:''}
+  `;
+}
+
+function switchTab(tab){state.activeTab=tab;saveState();renderMain()}
+
+['modal-char','modal-debuffs','modal-buffs'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id)});
+});
+document.getElementById('char-name-input').addEventListener('keydown',e=>{if(e.key==='Enter')saveChar()});
+
+renderAll();
+</script>
+</body>
+</html>
