@@ -9,7 +9,7 @@
   :root {
     --bg:#0e0f13;--surface:#16181f;--surface2:#1e2029;--border:#2a2d3a;
     --accent:#e8ff5a;--accent2:#ff5a5a;--accent3:#5ab4ff;
-    --buff:#5affb4;--hp:#ff8c5a;--text:#f0f0f0;--muted:#7a7f94;--radius:12px;
+    --buff:#5affb4;--hp:#ff8c5a;--san:#c084fc;--text:#f0f0f0;--muted:#7a7f94;--radius:12px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px}
@@ -33,6 +33,7 @@
   .char-item-info{flex:1}.char-item-name{font-weight:700;font-size:14px}
   .char-item-score{font-family:'DM Mono',monospace;font-size:11px;margin-top:3px}
   .char-item-actions{display:flex;gap:6px;margin-left:10px}
+  .char-note-preview{font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
   .main-area{display:flex;flex-direction:column;gap:20px}
   .stat-bar-wrap{margin-bottom:6px}
   .stat-bar-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
@@ -41,12 +42,8 @@
   .stat-base{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
   .bar-track{height:10px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
   .bar-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1),background .3s}
-  .hp-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
-  .hp-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .hp-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
-  .hp-value{font-family:'DM Mono',monospace;font-size:20px;font-weight:700}
-  .hp-track{height:14px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
-  .hp-fill{height:100%;border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1),background .3s}
+  .section-divider{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+  .san-state-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:8px}
   .tabs{display:flex;gap:4px;margin-bottom:16px}
   .tab{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;padding:7px 16px;border-radius:8px;border:1px solid transparent;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
   .tab.active-debuff{background:#1f1212;border-color:var(--accent2);color:var(--accent2)}
@@ -58,7 +55,8 @@
   .dcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
   .dcard-name{font-weight:700;font-size:14px;line-height:1.3}
   .dcard-cost{font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap;font-weight:500;margin-top:2px}
-  .cneg{color:var(--accent2)}.cpos{color:var(--buff)}
+  .cneg{color:var(--accent2)}.cpos{color:var(--buff)}.csan{color:var(--san)}
+  .san-badge{display:inline-flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:11px;color:var(--san);background:#1a0f2a;border:1px solid #3d2060;border-radius:6px;padding:2px 7px;margin-top:4px}
   .ctoggle{width:36px;height:20px;border-radius:99px;background:var(--surface);border:1px solid var(--border);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
   .ctoggle::after{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:var(--muted);top:50%;left:3px;transform:translateY(-50%);transition:all .2s}
   .ctoggle.on-debuff{background:#3a1010;border-color:var(--accent2)}.ctoggle.on-debuff::after{left:calc(100% - 16px);background:var(--accent2)}
@@ -75,24 +73,30 @@
   .summary-row{display:flex;justify-content:space-between;font-size:13px;font-family:'DM Mono',monospace;padding:8px 10px;border-radius:8px;background:var(--surface2)}
   .summary-row.total{border:1px solid var(--accent);color:var(--accent);font-weight:700;font-size:15px}
   .summary-row.total span:last-child{color:var(--accent)}
-  .hp-form{display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:center;margin-bottom:10px}
-  .event-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;padding-right:2px}
+  .summary-divider{height:1px;background:var(--border);margin:4px 0}
+  .event-form{display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:center;margin-bottom:10px}
+  .event-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;padding-right:2px}
   .event-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:8px;background:var(--surface2);font-size:13px;gap:10px}
   .event-desc{flex:1;color:var(--text)}.event-val{font-family:'DM Mono',monospace;font-weight:700;white-space:nowrap}
-  .event-val.pos{color:var(--buff)}.event-val.neg{color:var(--accent2)}
+  .ev-pos{color:var(--buff)}.ev-neg{color:var(--accent2)}.ev-san-pos{color:var(--san)}.ev-san-neg{color:var(--accent2)}
   .event-time{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
   .event-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;transition:color .15s}
   .event-del:hover{color:var(--accent2)}
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:500px;max-height:82vh;overflow-y:auto}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:540px;max-height:85vh;overflow-y:auto}
   .modal h2{font-size:20px;font-weight:800;margin-bottom:20px}
   .form-group{margin-bottom:16px}
   .form-label{display:block;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
   .form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
   .form-input:focus{border-color:var(--accent)}.form-input[type=number]{font-family:'DM Mono',monospace}
-  .mods-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
-  .mod-item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
-  .mod-item .form-input{padding:7px 10px;font-size:13px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mods-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .mod-item{display:grid;grid-template-columns:1fr 76px 76px auto;gap:8px;align-items:center}
+  .mod-item .form-input{padding:7px 10px;font-size:13px;text-align:center}
+  .mod-item .form-input:first-child{text-align:left}
+  .col-header{display:grid;grid-template-columns:1fr 76px 76px 32px;gap:8px;margin-bottom:6px}
+  .col-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:0 4px;text-align:center}
+  .col-lbl:first-child{text-align:left}
   .icon-btn{background:transparent;border:1px solid var(--border);color:var(--accent2);border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s}
   .icon-btn:hover{background:var(--accent2);color:#fff;border-color:var(--accent2)}
   .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
@@ -109,7 +113,17 @@
   .notes-count{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)}
   .notes-saved{font-size:10px;font-family:'DM Mono',monospace;color:var(--buff);opacity:0;transition:opacity .4s}
   .notes-hint{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:6px}
-  .char-note-preview{font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+  .san-focus:focus{border-color:var(--san)!important}
+
+  /* CAMPANHAS */
+  .campaign-bar{display:flex;align-items:center;gap:6px;margin-bottom:24px;flex-wrap:wrap}
+  .campaign-tab{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:8px 18px;border-radius:10px;border:1px solid var(--border);cursor:pointer;background:var(--surface2);color:var(--muted);transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .campaign-tab:hover{border-color:var(--accent3);color:var(--text)}
+  .campaign-tab.active{background:#1f2210;border-color:var(--accent);color:var(--accent)}
+  .campaign-tab .tab-close{font-size:12px;opacity:.5;margin-left:2px;line-height:1;padding:0 2px;border-radius:3px;transition:opacity .15s}
+  .campaign-tab .tab-close:hover{opacity:1;color:var(--accent2)}
+  .campaign-tab-add{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:8px 14px;border-radius:10px;border:1px dashed var(--border);cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
+  .campaign-tab-add:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -124,11 +138,14 @@
   </div>
 </header>
 
+<div class="campaign-bar" id="campaign-bar"></div>
 <div class="layout">
   <div>
     <div class="panel">
       <div class="panel-title">Personagens <span id="char-count" class="chip">0</span></div>
-      <div class="char-list" id="char-list"><div class="empty"><div class="empty-icon">🧙</div>Nenhum personagem ainda.</div></div>
+      <div class="char-list" id="char-list">
+        <div class="empty"><div class="empty-icon">🧙</div>Nenhum personagem ainda.</div>
+      </div>
     </div>
   </div>
   <div class="main-area" id="main-area">
@@ -141,8 +158,10 @@
   <div class="modal">
     <h2 id="modal-char-title">Novo Personagem</h2>
     <div class="form-group"><label class="form-label">Nome</label><input class="form-input" id="char-name-input" placeholder="Ex: Guerreiro das Sombras"></div>
-    <div class="form-group"><label class="form-label">Pontuação Base</label><input class="form-input" type="number" id="char-score-input" value="100"></div>
-    <div class="form-group"><label class="form-label">HP Máximo</label><input class="form-input" type="number" id="char-hp-input" value="100"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Pontuação Base</label><input class="form-input" type="number" id="char-score-input" value="100"></div>
+      <div class="form-group"><label class="form-label">HP Máximo</label><input class="form-input" type="number" id="char-hp-input" value="100"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-char')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveChar()">Salvar</button>
@@ -154,6 +173,7 @@
 <div class="modal-overlay" id="modal-debuffs" style="display:none">
   <div class="modal">
     <h2>Gerenciar Debuffs</h2>
+    <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:14px">Cada debuff pode ter um custo de pontuação <span style="color:var(--accent2)">e/ou</span> um custo de sanidade <span style="color:var(--san)">🧠</span></div>
     <div id="debuffs-editor-list" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px;max-height:52vh;overflow-y:auto;padding-right:4px"></div>
     <button class="btn btn-ghost" style="width:100%" onclick="addNewDebuffEntry()">+ Adicionar Debuff</button>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-debuffs')">Cancelar</button><button class="btn btn-primary" onclick="saveDebuffs()">Salvar</button></div>
@@ -164,6 +184,7 @@
 <div class="modal-overlay" id="modal-buffs" style="display:none">
   <div class="modal">
     <h2>Gerenciar Buffs</h2>
+    <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:14px">Cada buff pode ganhar pontuação <span style="color:var(--buff)">e/ou</span> restaurar sanidade <span style="color:var(--san)">🧠</span></div>
     <div id="buffs-editor-list" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px;max-height:52vh;overflow-y:auto;padding-right:4px"></div>
     <button class="btn btn-ghost" style="width:100%" onclick="addNewBuffEntry()">+ Adicionar Buff</button>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-buffs')">Cancelar</button><button class="btn btn-buff" onclick="saveBuffs()">Salvar</button></div>
@@ -171,72 +192,209 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'debufflab_v2';
+function uid(){return '_'+Math.random().toString(36).slice(2,9)}
 
+// ══════════════════════════════════════
+//  CONSTANTES
+// ══════════════════════════════════════
+const STORAGE_KEY = 'debufflab_v4';
+const SAN_MAX = 50;
+
+const SAN_STATES = [
+  { min:42, label:'São',               color:'#5affb4', bg:'#071a10', emoji:'🟢' },
+  { min:32, label:'Abalado',           color:'#a3e635', bg:'#182500', emoji:'🟡' },
+  { min:22, label:'Perturbado',        color:'#facc15', bg:'#221a00', emoji:'🟠' },
+  { min:12, label:'Instável',          color:'#fb923c', bg:'#221000', emoji:'🔴' },
+  { min: 1, label:'À beira do abismo', color:'#f87171', bg:'#220606', emoji:'💀' },
+  { min: 0, label:'Louco',             color:'#c084fc', bg:'#150520', emoji:'🌀' },
+];
+function getSanState(san){ return SAN_STATES.find(s=>san>=s.min)??SAN_STATES[SAN_STATES.length-1] }
+
+// ══════════════════════════════════════
+//  DEFAULTS
+// ══════════════════════════════════════
 const DEFAULT_DEBUFFS = [
-  {id:'d1',name:'Cego',baseCost:10,modifiers:[{id:'m1_d1',label:'Permanente',cost:5},{id:'m2_d1',label:'Afeta magia também',cost:5}]},
-  {id:'d2',name:'Lentidão',baseCost:8,modifiers:[{id:'m1_d2',label:'Grave (-75% velocidade)',cost:7},{id:'m2_d2',label:'Imobilizado',cost:12}]},
-  {id:'d3',name:'Envenenado',baseCost:12,modifiers:[{id:'m1_d3',label:'Veneno forte (+dano)',cost:8},{id:'m2_d3',label:'Incurável',cost:10}]},
-  {id:'d4',name:'Maldição de Ataque',baseCost:15,modifiers:[{id:'m1_d4',label:'Afeta habilidades especiais',cost:10}]},
-  {id:'d5',name:'Fraqueza',baseCost:7,modifiers:[{id:'m1_d5',label:'Extrema (-50% força)',cost:8},{id:'m2_d5',label:'Permanente',cost:6},{id:'m3_d5',label:'Afeta toda a party',cost:15}]},
-  {id:'d6',name:'Silenciado',baseCost:9,modifiers:[{id:'m1_d6',label:'Não pode comunicar',cost:5}]},
+  {id:'d1',name:'Cego',              baseCost:10,sanCost:0, modifiers:[{id:'m1d1',label:'Permanente',cost:5,sanCost:0},{id:'m2d1',label:'Afeta magia também',cost:5,sanCost:2}]},
+  {id:'d2',name:'Lentidão',          baseCost:8, sanCost:0, modifiers:[{id:'m1d2',label:'Grave (-75% vel.)',cost:7,sanCost:0},{id:'m2d2',label:'Imobilizado',cost:12,sanCost:3}]},
+  {id:'d3',name:'Envenenado',        baseCost:12,sanCost:2, modifiers:[{id:'m1d3',label:'Veneno forte',cost:8,sanCost:3},{id:'m2d3',label:'Incurável',cost:10,sanCost:5}]},
+  {id:'d4',name:'Maldição de Ataque',baseCost:15,sanCost:5, modifiers:[{id:'m1d4',label:'Afeta habilidades especiais',cost:10,sanCost:3}]},
+  {id:'d5',name:'Fraqueza',          baseCost:7, sanCost:0, modifiers:[{id:'m1d5',label:'Extrema (-50% força)',cost:8,sanCost:2},{id:'m2d5',label:'Permanente',cost:6,sanCost:4},{id:'m3d5',label:'Afeta toda a party',cost:15,sanCost:8}]},
+  {id:'d6',name:'Silenciado',        baseCost:9, sanCost:3, modifiers:[{id:'m1d6',label:'Não pode comunicar',cost:5,sanCost:5}]},
 ];
 const DEFAULT_BUFFS = [
-  {id:'b1',name:'Bem Descansado',baseCost:10,modifiers:[{id:'mb1_b1',label:'Sono profundo',cost:5}]},
-  {id:'b2',name:'Bênção Divina',baseCost:15,modifiers:[{id:'mb1_b2',label:'Bênção maior',cost:10},{id:'mb2_b2',label:'Permanente',cost:8}]},
-  {id:'b3',name:'Poção de Força',baseCost:12,modifiers:[{id:'mb1_b3',label:'Poção aprimorada',cost:7}]},
-  {id:'b4',name:'Inspiração',baseCost:8,modifiers:[{id:'mb1_b4',label:'Inspiração lendária',cost:12}]},
-  {id:'b5',name:'Proteção Mágica',baseCost:11,modifiers:[{id:'mb1_b5',label:'Escudo total',cost:9},{id:'mb2_b5',label:'Afeta aliados próximos',cost:14}]},
+  {id:'b1',name:'Bem Descansado', baseCost:10,sanGain:3, modifiers:[{id:'mb1b1',label:'Sono profundo',cost:5,sanGain:2}]},
+  {id:'b2',name:'Bênção Divina',  baseCost:15,sanGain:8, modifiers:[{id:'mb1b2',label:'Bênção maior',cost:10,sanGain:5},{id:'mb2b2',label:'Permanente',cost:8,sanGain:4}]},
+  {id:'b3',name:'Poção de Força', baseCost:12,sanGain:0, modifiers:[{id:'mb1b3',label:'Poção aprimorada',cost:7,sanGain:0}]},
+  {id:'b4',name:'Inspiração',     baseCost:8, sanGain:5, modifiers:[{id:'mb1b4',label:'Inspiração lendária',cost:12,sanGain:6}]},
+  {id:'b5',name:'Proteção Mágica',baseCost:11,sanGain:2, modifiers:[{id:'mb1b5',label:'Escudo total',cost:9,sanGain:1},{id:'mb2b5',label:'Afeta aliados próximos',cost:14,sanGain:3}]},
 ];
 
+// ══════════════════════════════════════
+//  STORAGE
+// ══════════════════════════════════════
 function loadState(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)return JSON.parse(r)}catch(e){}return null}
 function saveState(){
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify({characters:state.characters,activeCharId:state.activeCharId,debuffs:state.debuffs,buffs:state.buffs,selections:state.selections,hpEvents:state.hpEvents,activeTab:state.activeTab,notes:state.notes}));
+    // persiste tudo das campanhas + campanha ativa
+    const snap={activeCampaignId:state.activeCampaignId,campaigns:state.campaigns};
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(snap));
     const ind=document.getElementById('save-indicator');
     if(ind){ind.style.opacity='1';setTimeout(()=>ind.style.opacity='0',1400)}
   }catch(e){}
 }
 
-const saved=loadState();
-let state={
-  characters:saved?.characters??[],activeCharId:saved?.activeCharId??null,
-  debuffs:saved?.debuffs??DEFAULT_DEBUFFS,buffs:saved?.buffs??DEFAULT_BUFFS,
-  selections:saved?.selections??{},hpEvents:saved?.hpEvents??{},notes:saved?.notes??{},
-  activeTab:saved?.activeTab??'debuff',
-};
-
-function uid(){return '_'+Math.random().toString(36).slice(2,9)}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function getSel(cid){if(!state.selections[cid])state.selections[cid]={};return state.selections[cid]}
-function getEvts(cid){if(!state.hpEvents[cid])state.hpEvents[cid]=[];return state.hpEvents[cid]}
-
-function calcChar(char){
-  const sel=getSel(char.id);
-  let deducted=0,buffed=0,debuffLines=[],buffLines=[];
-  state.debuffs.forEach(d=>{
-    const e=sel[d.id];if(!e||!e.active)return;
-    let cost=d.baseCost,mods=0;
-    (d.modifiers||[]).forEach(m=>{if(e.mods&&e.mods[m.id]){cost+=m.cost;mods+=m.cost}});
-    deducted+=cost;debuffLines.push({name:d.name,base:d.baseCost,mods,total:cost});
-  });
-  state.buffs.forEach(b=>{
-    const e=sel[b.id];if(!e||!e.active)return;
-    let gain=b.baseCost,mods=0;
-    (b.modifiers||[]).forEach(m=>{if(e.mods&&e.mods[m.id]){gain+=m.cost;mods+=m.cost}});
-    buffed+=gain;buffLines.push({name:b.name,base:b.baseCost,mods,total:gain});
-  });
-  const maxHp=char.maxHp??100;
-  const hpDelta=getEvts(char.id).reduce((a,ev)=>a+ev.value,0);
-  const currentHp=Math.max(0,Math.min(maxHp,maxHp+hpDelta));
-  return{score:char.base-deducted+buffed,deducted,buffed,debuffLines,buffLines,currentHp,maxHp};
+// ══════════════════════════════════════
+//  ESTADO
+// ══════════════════════════════════════
+// ── estrutura de campanha padrão ──
+function newCampaign(name){
+  return {
+    id:uid(), name,
+    characters:[],activeCharId:null,
+    debuffs:JSON.parse(JSON.stringify(DEFAULT_DEBUFFS)),
+    buffs:JSON.parse(JSON.stringify(DEFAULT_BUFFS)),
+    selections:{},hpEvents:{},sanEvents:{},
+    activeTab:'debuff',notes:{}
+  };
 }
 
-function scol(score,base){const p=score/base;return p>.6?'var(--buff)':p>.3?'var(--accent)':'var(--accent2)'}
-function hcol(hp,max){const p=hp/max;return p>.6?'var(--buff)':p>.3?'var(--hp)':'var(--accent2)'}
+const saved=loadState();
+const firstCampaign = saved?.campaigns?.[0] ?? newCampaign('Campanha 1');
+let state={
+  activeCampaignId: saved?.activeCampaignId ?? firstCampaign.id,
+  campaigns: saved?.campaigns ?? [firstCampaign],
+};
+
+// getters da campanha ativa — simplificam o resto do código
+function camp(){ return state.campaigns.find(c=>c.id===state.activeCampaignId)??state.campaigns[0] }
+// proxy getters — tudo que o código usa como cst.X agora vira camp().X
+const stateProxy = new Proxy({},{
+  get(_,k){ return camp()[k] },
+  set(_,k,v){ camp()[k]=v; return true }
+});
+const cst = stateProxy; // alias curto
+
+// ══════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function getSel(cid){if(!cst.selections[cid])cst.selections[cid]={};return cst.selections[cid]}
+function getHpEvts(cid){if(!cst.hpEvents[cid])cst.hpEvents[cid]=[];return cst.hpEvents[cid]}
+function getSanEvts(cid){if(!cst.sanEvents[cid])cst.sanEvents[cid]=[];return cst.sanEvents[cid]}
 function fmtTime(ts){return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 
-// ── Personagens ──
+// ══════════════════════════════════════
+//  CÁLCULO
+// ══════════════════════════════════════
+function calcChar(char){
+  const sel=getSel(char.id);
+  let deducted=0,buffed=0,sanDrain=0,sanRestore=0,debuffLines=[],buffLines=[];
+
+  cst.debuffs.forEach(d=>{
+    const e=sel[d.id];if(!e||!e.active)return;
+    let cost=d.baseCost,mods=0,san=d.sanCost||0,sanMods=0;
+    (d.modifiers||[]).forEach(m=>{if(e.mods?.[m.id]){cost+=m.cost;mods+=m.cost;san+=(m.sanCost||0);sanMods+=(m.sanCost||0)}});
+    deducted+=cost;sanDrain+=san;
+    debuffLines.push({name:d.name,base:d.baseCost,mods,total:cost,san,sanMods});
+  });
+
+  cst.buffs.forEach(b=>{
+    const e=sel[b.id];if(!e||!e.active)return;
+    let gain=b.baseCost,mods=0,sanG=b.sanGain||0,sanMods=0;
+    (b.modifiers||[]).forEach(m=>{if(e.mods?.[m.id]){gain+=m.cost;mods+=m.cost;sanG+=(m.sanGain||0);sanMods+=(m.sanGain||0)}});
+    buffed+=gain;sanRestore+=sanG;
+    buffLines.push({name:b.name,base:b.baseCost,mods,total:gain,sanG,sanMods});
+  });
+
+  const maxHp=char.maxHp??100;
+  const hpDelta=getHpEvts(char.id).reduce((a,ev)=>a+ev.value,0);
+  const currentHp=Math.max(0,Math.min(maxHp,maxHp+hpDelta));
+
+  const sanEvtDelta=getSanEvts(char.id).reduce((a,ev)=>a+ev.value,0);
+  const currentSan=Math.max(0,Math.min(SAN_MAX,SAN_MAX-sanDrain+sanRestore+sanEvtDelta));
+
+  const score=char.base-deducted+buffed;
+  const bsk=calcBhaskara(score,char.base,currentHp,maxHp,currentSan);
+  return{score,deducted,buffed,debuffLines,buffLines,currentHp,maxHp,currentSan,sanDrain,sanRestore,sanEvtDelta,bsk};
+}
+
+function scol(s,b){const p=s/b;return p>.6?'var(--buff)':p>.3?'var(--accent)':'var(--accent2)'}
+
+// ══════════════════════════════════════
+//  BHASKARA — Índice de Vitalidade
+//  A = 1  |  B = -(P + H + S²)  |  C = P·H·S²
+//  x = (-B + √(B²−4AC)) / 2  × 100
+//
+//  Sanidade domina via S² em B e C.
+//  Resultado cai monotonicamente quando P, H ou S caem.
+//  Tudo máximo ≈ 262  |  Tudo zero = 0
+// ══════════════════════════════════════
+function calcBhaskara(score, baseScore, currentHp, maxHp, currentSan){
+  const P = Math.max(0, Math.min(1, score / Math.max(1, baseScore)));
+  const H = Math.max(0, Math.min(1, currentHp / Math.max(1, maxHp)));
+  const S = Math.max(0, Math.min(1, currentSan / SAN_MAX));
+
+  const A = 1;
+  const B = -(P + H + S * S);   // sanidade ao quadrado: peso dominante
+  const C =  P * H * (S * S);   // interação tripla: alto só se todos forem altos
+
+  const delta = B*B - 4*A*C;
+  const sqrtD = delta >= 0 ? Math.sqrt(delta) : 0;
+  const x = ((-B + sqrtD) / 2) * 100;
+
+  const collapsed = delta < 0 || (P === 0 && H === 0 && S === 0);
+  const final = collapsed ? -Math.round(Math.abs(x)) : Math.round(x);
+  return { x: final, delta: Math.round(delta * 10000) / 10000, collapsed, P, H, S };
+}
+
+function bhaskCol(x){ return x > 60 ? 'var(--buff)' : x > 30 ? 'var(--accent)' : x > 0 ? 'var(--hp)' : 'var(--accent2)' }
+
+// ══════════════════════════════════════
+//  CAMPANHAS
+// ══════════════════════════════════════
+function renderCampaignBar(){
+  const bar=document.getElementById('campaign-bar');
+  bar.innerHTML=state.campaigns.map(c=>`
+    <button class="campaign-tab ${c.id===state.activeCampaignId?'active':''}" onclick="switchCampaign('${c.id}')">
+      ${esc(c.name)}
+      <span class="tab-close" onclick="event.stopPropagation();deleteCampaign('${c.id}')" title="Remover campanha">✕</span>
+    </button>`).join('')+
+    `<button class="campaign-tab-add" onclick="createCampaign()">＋ Nova campanha</button>`;
+}
+
+function switchCampaign(id){
+  state.activeCampaignId=id;
+  saveState();renderCampaignBar();renderAll();
+}
+
+function createCampaign(){
+  const name=prompt('Nome da campanha:','Campanha '+(state.campaigns.length+1));
+  if(!name||!name.trim())return;
+  const c=newCampaign(name.trim());
+  state.campaigns.push(c);
+  state.activeCampaignId=c.id;
+  saveState();renderCampaignBar();renderAll();
+}
+
+function renameCampaign(id){
+  const c=state.campaigns.find(c=>c.id===id);if(!c)return;
+  const name=prompt('Novo nome:',c.name);
+  if(!name||!name.trim())return;
+  c.name=name.trim();
+  saveState();renderCampaignBar();
+}
+
+function deleteCampaign(id){
+  if(state.campaigns.length===1){alert('Você precisa ter pelo menos uma campanha.');return}
+  if(!confirm('Remover esta campanha e todos os seus personagens?'))return;
+  state.campaigns=state.campaigns.filter(c=>c.id!==id);
+  if(state.activeCampaignId===id) state.activeCampaignId=state.campaigns[0].id;
+  saveState();renderCampaignBar();renderAll();
+}
+
+// ══════════════════════════════════════
+//  PERSONAGENS
+// ══════════════════════════════════════
 let editingCharId=null;
 function openNewChar(){
   editingCharId=null;
@@ -248,7 +406,7 @@ function openNewChar(){
   setTimeout(()=>document.getElementById('char-name-input').focus(),50);
 }
 function openEditChar(id){
-  const c=state.characters.find(c=>c.id===id);if(!c)return;
+  const c=cst.characters.find(c=>c.id===id);if(!c)return;
   editingCharId=id;
   document.getElementById('modal-char-title').textContent='Editar Personagem';
   document.getElementById('char-name-input').value=c.name;
@@ -261,35 +419,27 @@ function saveChar(){
   const base=parseInt(document.getElementById('char-score-input').value)||100;
   const maxHp=parseInt(document.getElementById('char-hp-input').value)||100;
   if(!name){document.getElementById('char-name-input').focus();return}
-  if(editingCharId){const c=state.characters.find(c=>c.id===editingCharId);c.name=name;c.base=base;c.maxHp=maxHp}
-  else{const c={id:uid(),name,base,maxHp};state.characters.push(c);state.activeCharId=c.id}
+  if(editingCharId){const c=cst.characters.find(c=>c.id===editingCharId);c.name=name;c.base=base;c.maxHp=maxHp}
+  else{const c={id:uid(),name,base,maxHp};cst.characters.push(c);cst.activeCharId=c.id}
   saveState();closeModal('modal-char');renderAll();
 }
 function deleteChar(id){
   if(!confirm('Remover personagem?'))return;
-  if(state.activeCharId===id){
-    const idx=state.characters.findIndex(c=>c.id===id);
-    const nxt=state.characters[idx+1]||state.characters[idx-1]||null;
-    state.activeCharId=nxt?nxt.id:null;
+  if(cst.activeCharId===id){
+    const idx=cst.characters.findIndex(c=>c.id===id);
+    const nxt=cst.characters[idx+1]||cst.characters[idx-1]||null;
+    cst.activeCharId=nxt?nxt.id:null;
   }
-  state.characters=state.characters.filter(c=>c.id!==id);
-  delete state.selections[id];delete state.hpEvents[id];
+  cst.characters=cst.characters.filter(c=>c.id!==id);
+  delete cst.selections[id];delete cst.hpEvents[id];delete cst.sanEvents[id];
   saveState();renderAll();
 }
-function setActive(id){state.activeCharId=id;saveState();renderAll()}
+function setActive(id){cst.activeCharId=id;saveState();renderAll()}
 
-// ── Editor genérico ──
+// ══════════════════════════════════════
+//  EDITOR DE EFEITOS
+// ══════════════════════════════════════
 let tempDebuffs=[],tempBuffs=[];
-function openDebuffEditor(){tempDebuffs=JSON.parse(JSON.stringify(state.debuffs));renderEditor('debuffs-editor-list',tempDebuffs,'debuff');document.getElementById('modal-debuffs').style.display='flex'}
-function openBuffEditor(){tempBuffs=JSON.parse(JSON.stringify(state.buffs));renderEditor('buffs-editor-list',tempBuffs,'buff');document.getElementById('modal-buffs').style.display='flex'}
-function addNewDebuffEntry(){tempDebuffs.push({id:uid(),name:'',baseCost:10,modifiers:[]});renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
-function addNewBuffEntry(){tempBuffs.push({id:uid(),name:'',baseCost:10,modifiers:[]});renderEditor('buffs-editor-list',tempBuffs,'buff')}
-function removeDebuffEntry(i){tempDebuffs.splice(i,1);renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
-function removeBuffEntry(i){tempBuffs.splice(i,1);renderEditor('buffs-editor-list',tempBuffs,'buff')}
-function addDebuffMod(di){tempDebuffs[di].modifiers.push({id:uid(),label:'',cost:5});renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
-function addBuffMod(di){tempBuffs[di].modifiers.push({id:uid(),label:'',cost:5});renderEditor('buffs-editor-list',tempBuffs,'buff')}
-function removeDebuffMod(di,mi){tempDebuffs[di].modifiers.splice(mi,1);renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
-function removeBuffMod(di,mi){tempBuffs[di].modifiers.splice(mi,1);renderEditor('buffs-editor-list',tempBuffs,'buff')}
 
 function renderEditor(cid,arr,type){
   const el=document.getElementById(cid);
@@ -297,49 +447,73 @@ function renderEditor(cid,arr,type){
   const rfn=type==='buff'?'removeBuffEntry':'removeDebuffEntry';
   const amfn=type==='buff'?'addBuffMod':'addDebuffMod';
   const rmfn=type==='buff'?'removeBuffMod':'removeDebuffMod';
+  const sf=type==='buff'?'sanGain':'sanCost';
+  const slbl=type==='buff'?'🧠 +San':'🧠 −San';
   if(!arr.length){el.innerHTML=`<div class="empty"><div class="empty-icon">${type==='buff'?'✦':'💀'}</div>Nenhum ${type} ainda.</div>`;return}
   el.innerHTML=arr.map((d,di)=>`
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <input class="form-input" style="flex:1" value="${esc(d.name)}" placeholder="Nome do ${type}" oninput="${vr}[${di}].name=this.value">
-        <input class="form-input" type="number" style="width:80px" value="${d.baseCost}" oninput="${vr}[${di}].baseCost=parseInt(this.value)||0">
+      <div class="col-header" style="margin-bottom:4px">
+        <div class="col-lbl">Nome</div>
+        <div class="col-lbl">${type==='buff'?'+ Pts':'− Pts'}</div>
+        <div class="col-lbl" style="color:var(--san)">${slbl}</div>
+        <div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 76px 76px auto;gap:8px;align-items:center;margin-bottom:12px">
+        <input class="form-input" value="${esc(d.name)}" placeholder="Nome do ${type}" oninput="${vr}[${di}].name=this.value">
+        <input class="form-input" type="number" value="${d.baseCost}" oninput="${vr}[${di}].baseCost=parseInt(this.value)||0" style="text-align:center">
+        <input class="form-input san-focus" type="number" value="${d[sf]||0}" oninput="${vr}[${di}].${sf}=parseInt(this.value)||0" style="text-align:center;border-color:rgba(192,132,252,.3)">
         <button class="icon-btn" onclick="${rfn}(${di})">✕</button>
       </div>
-      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Modificadores</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Modificadores</div>
       <div class="mods-list">${(d.modifiers||[]).map((m,mi)=>`
         <div class="mod-item">
-          <input class="form-input" value="${esc(m.label)}" placeholder="Nome do modificador" oninput="${vr}[${di}].modifiers[${mi}].label=this.value">
-          <input class="form-input" type="number" style="width:72px" value="${m.cost}" oninput="${vr}[${di}].modifiers[${mi}].cost=parseInt(this.value)||0">
+          <input class="form-input" value="${esc(m.label)}" placeholder="Nome" oninput="${vr}[${di}].modifiers[${mi}].label=this.value">
+          <input class="form-input" type="number" value="${m.cost}" oninput="${vr}[${di}].modifiers[${mi}].cost=parseInt(this.value)||0" style="text-align:center">
+          <input class="form-input san-focus" type="number" value="${m[sf]||0}" oninput="${vr}[${di}].modifiers[${mi}].${sf}=parseInt(this.value)||0" style="text-align:center;border-color:rgba(192,132,252,.3)">
           <button class="icon-btn" onclick="${rmfn}(${di},${mi})">✕</button>
         </div>`).join('')}</div>
       <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="${amfn}(${di})">+ Modificador</button>
     </div>`).join('');
 }
 
-function cleanEntries(arr){
+function openDebuffEditor(){tempDebuffs=JSON.parse(JSON.stringify(cst.debuffs));renderEditor('debuffs-editor-list',tempDebuffs,'debuff');document.getElementById('modal-debuffs').style.display='flex'}
+function openBuffEditor(){tempBuffs=JSON.parse(JSON.stringify(cst.buffs));renderEditor('buffs-editor-list',tempBuffs,'buff');document.getElementById('modal-buffs').style.display='flex'}
+function addNewDebuffEntry(){tempDebuffs.push({id:uid(),name:'',baseCost:10,sanCost:0,modifiers:[]});renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
+function addNewBuffEntry(){tempBuffs.push({id:uid(),name:'',baseCost:10,sanGain:0,modifiers:[]});renderEditor('buffs-editor-list',tempBuffs,'buff')}
+function removeDebuffEntry(i){tempDebuffs.splice(i,1);renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
+function removeBuffEntry(i){tempBuffs.splice(i,1);renderEditor('buffs-editor-list',tempBuffs,'buff')}
+function addDebuffMod(di){tempDebuffs[di].modifiers.push({id:uid(),label:'',cost:5,sanCost:0});renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
+function addBuffMod(di){tempBuffs[di].modifiers.push({id:uid(),label:'',cost:5,sanGain:0});renderEditor('buffs-editor-list',tempBuffs,'buff')}
+function removeDebuffMod(di,mi){tempDebuffs[di].modifiers.splice(mi,1);renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
+function removeBuffMod(di,mi){tempBuffs[di].modifiers.splice(mi,1);renderEditor('buffs-editor-list',tempBuffs,'buff')}
+
+function cleanEntries(arr,type){
+  const sf=type==='buff'?'sanGain':'sanCost';
   return arr.filter(d=>d.name.trim()).map(d=>{
-    if(!d.id)d.id=uid();
-    d.modifiers=(d.modifiers||[]).filter(m=>m.label.trim()).map(m=>({...m,id:m.id||uid()}));
+    if(!d.id)d.id=uid();d[sf]=d[sf]||0;
+    d.modifiers=(d.modifiers||[]).filter(m=>m.label.trim()).map(m=>({...m,id:m.id||uid(),[sf]:m[sf]||0}));
     return d;
   });
 }
 function pruneSelections(validIds){
-  Object.keys(state.selections).forEach(cid=>{
-    Object.keys(state.selections[cid]).forEach(eid=>{if(!validIds.has(eid))delete state.selections[cid][eid]});
+  Object.keys(cst.selections).forEach(cid=>{
+    Object.keys(cst.selections[cid]).forEach(eid=>{if(!validIds.has(eid))delete cst.selections[cid][eid]});
   });
 }
 function saveDebuffs(){
-  const c=cleanEntries(tempDebuffs);
-  pruneSelections(new Set([...c.map(d=>d.id),...state.buffs.map(b=>b.id)]));
-  state.debuffs=c;saveState();closeModal('modal-debuffs');renderAll();
+  const c=cleanEntries(tempDebuffs,'debuff');
+  pruneSelections(new Set([...c.map(d=>d.id),...cst.buffs.map(b=>b.id)]));
+  cst.debuffs=c;saveState();closeModal('modal-debuffs');renderAll();
 }
 function saveBuffs(){
-  const c=cleanEntries(tempBuffs);
-  pruneSelections(new Set([...state.debuffs.map(d=>d.id),...c.map(b=>b.id)]));
-  state.buffs=c;saveState();closeModal('modal-buffs');renderAll();
+  const c=cleanEntries(tempBuffs,'buff');
+  pruneSelections(new Set([...cst.debuffs.map(d=>d.id),...c.map(b=>b.id)]));
+  cst.buffs=c;saveState();closeModal('modal-buffs');renderAll();
 }
 
-// ── Toggles ──
+// ══════════════════════════════════════
+//  TOGGLES
+// ══════════════════════════════════════
 function toggleEntry(charId,entryId){
   const sel=getSel(charId);
   if(!sel[entryId])sel[entryId]={active:false,mods:{}};
@@ -354,42 +528,114 @@ function toggleMod(charId,entryId,modId){
   saveState();renderMain();
 }
 
-// ── Eventos HP ──
+// ══════════════════════════════════════
+//  EVENTOS HP
+// ══════════════════════════════════════
 function addHpEvent(charId){
-  const de=document.getElementById('hp-event-desc');
-  const ve=document.getElementById('hp-event-val');
-  const desc=de.value.trim();
-  const value=parseInt(ve.value);
+  const de=document.getElementById('hp-event-desc'),ve=document.getElementById('hp-event-val');
+  const desc=de.value.trim(),value=parseInt(ve.value);
   if(!desc||isNaN(value)||value===0){(!desc?de:ve).focus();return}
-  getEvts(charId).unshift({id:uid(),desc,value,ts:Date.now()});
-  de.value='';ve.value='';
-  saveState();renderMain();
+  getHpEvts(charId).unshift({id:uid(),desc,value,ts:Date.now()});
+  de.value='';ve.value='';saveState();renderMain();
 }
 function removeHpEvent(charId,eventId){
-  if(!state.hpEvents[charId])return;
-  state.hpEvents[charId]=state.hpEvents[charId].filter(e=>e.id!==eventId);
+  cst.hpEvents[charId]=getHpEvts(charId).filter(e=>e.id!==eventId);
   saveState();renderMain();
 }
 
-// ── Render ──
+// ══════════════════════════════════════
+//  EVENTOS SANIDADE
+// ══════════════════════════════════════
+function addSanEvent(charId){
+  const de=document.getElementById('san-event-desc'),ve=document.getElementById('san-event-val');
+  const desc=de.value.trim(),value=parseInt(ve.value);
+  if(!desc||isNaN(value)||value===0){(!desc?de:ve).focus();return}
+  getSanEvts(charId).unshift({id:uid(),desc,value,ts:Date.now()});
+  de.value='';ve.value='';saveState();renderMain();
+}
+function removeSanEvent(charId,eventId){
+  cst.sanEvents[charId]=getSanEvts(charId).filter(e=>e.id!==eventId);
+  saveState();renderMain();
+}
+
+// ══════════════════════════════════════
+//  NOTAS
+// ══════════════════════════════════════
+function saveNote(charId){
+  const ta=document.getElementById('notes-ta-'+charId);if(!ta)return;
+  cst.notes[charId]=ta.value;saveState();
+  const s=document.getElementById('notes-saved-'+charId);
+  if(s){s.style.opacity='1';setTimeout(()=>s.style.opacity='0',1600)}
+}
+function updateNoteCount(charId){
+  const ta=document.getElementById('notes-ta-'+charId);
+  const el=document.getElementById('notes-count-'+charId);
+  if(ta&&el)el.textContent=ta.value.length+' caracteres';
+}
+
+// ══════════════════════════════════════
+//  RENDER CARDS
+// ══════════════════════════════════════
+function renderCards(list,type,charId){
+  const sel=getSel(charId);
+  if(!list.length)return`<div class="empty"><div class="empty-icon">${type==='buff'?'✦':'💀'}</div>Nenhum ${type} cadastrado.</div>`;
+  const sign=type==='buff'?'+':'−';const ccls=type==='buff'?'cpos':'cneg';
+  const sf=type==='buff'?'sanGain':'sanCost';
+  return`<div class="card-grid">${list.map(d=>{
+    const e=sel[d.id]||{active:false,mods:{}};const on=!!e.active;
+    const sc=on?(type==='buff'?'sel-buff':'sel-debuff'):'';
+    const tc=on?(type==='buff'?'on-buff':'on-debuff'):'';
+    const sv=d[sf]||0;
+    return`<div class="dcard ${sc}">
+      <div class="dcard-top">
+        <div>
+          <div class="dcard-name">${esc(d.name)}</div>
+          <div class="dcard-cost ${ccls}">${sign}${d.baseCost} pts base</div>
+          ${sv>0?`<div class="san-badge">🧠 ${type==='buff'?'+':'−'}${sv} san</div>`:''}
+        </div>
+        <div class="ctoggle ${tc}" onclick="toggleEntry('${charId}','${d.id}')"></div>
+      </div>
+      ${d.modifiers&&d.modifiers.length?`<div class="modifiers">${d.modifiers.map(m=>{
+        const mon=!!(e.mods?.[m.id]);
+        const mtc=mon?(type==='buff'?'on-buff':'on-debuff'):'';
+        const ms=m[sf]||0;
+        return`<div class="modifier-row ${on&&mon?'enabled':''}">
+          <div class="modifier-label">${esc(m.label)}</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <div class="modifier-cost ${ccls}">+${m.cost} pts</div>
+            ${ms>0?`<div class="modifier-cost csan">${type==='buff'?'+':'−'}${ms}🧠</div>`:''}
+          </div>
+          <div class="mtoggle ${mtc}" onclick="${on?`toggleMod('${charId}','${d.id}','${m.id}')`:``}"></div>
+        </div>`;
+      }).join('')}</div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ══════════════════════════════════════
+//  RENDER PRINCIPAL
+// ══════════════════════════════════════
 function closeModal(id){document.getElementById(id).style.display='none'}
 function renderAll(){renderCharList();renderMain()}
+function renderEverything(){renderCampaignBar();renderAll()}
 
 function renderCharList(){
   const el=document.getElementById('char-list');
-  document.getElementById('char-count').textContent=state.characters.length;
-  if(!state.characters.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🧙</div>Nenhum personagem ainda.</div>`;return}
-  el.innerHTML=state.characters.map(c=>{
-    const{score,currentHp,maxHp}=calcChar(c);
-    const isAct=c.id===state.activeCharId;
+  document.getElementById('char-count').textContent=cst.characters.length;
+  if(!cst.characters.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🧙</div>Nenhum personagem ainda.</div>`;return}
+  el.innerHTML=cst.characters.map(c=>{
+    const{score,currentHp,maxHp,currentSan,bsk}=calcChar(c);
+    const ss=getSanState(currentSan);const isAct=c.id===cst.activeCharId;
     return`<div class="char-item ${isAct?'active':''}" onclick="setActive('${c.id}')">
       <div class="char-item-info">
         <div class="char-item-name">${esc(c.name)}</div>
         <div class="char-item-score">
-          <span style="color:${scol(score,c.base)}">${score} pts</span> &nbsp;·&nbsp;
-          <span style="color:${hcol(currentHp,maxHp)}">${currentHp}/${maxHp} HP</span>
+          <span style="color:${bhaskCol(bsk.x)}">⚡${bsk.x}</span> ·
+          <span style="color:${scol(score,c.base)}">${score}pts</span> ·
+          <span style="color:var(--accent3)">${currentHp}HP</span> ·
+          <span style="color:${ss.color}">${ss.emoji}${currentSan}</span>
         </div>
-        ${(state.notes[c.id]??'').trim()?`<div class="char-note-preview">📝 ${esc((state.notes[c.id]??'').trim().slice(0,50))}${(state.notes[c.id]??'').length>50?'…':''}</div>`:''}
+        ${(cst.notes[c.id]??'').trim()?`<div class="char-note-preview">📝 ${esc((cst.notes[c.id]??'').slice(0,50))}${(cst.notes[c.id]??'').length>50?'…':''}</div>`:''}
       </div>
       <div class="char-item-actions">
         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditChar('${c.id}')">✎</button>
@@ -399,67 +645,22 @@ function renderCharList(){
   }).join('');
 }
 
-// ── Notas ──
-function saveNote(charId){
-  const ta=document.getElementById('notes-ta-'+charId);
-  if(!ta)return;
-  state.notes[charId]=ta.value;
-  saveState();
-  const saved=document.getElementById('notes-saved-'+charId);
-  if(saved){saved.style.opacity='1';setTimeout(()=>saved.style.opacity='0',1600)}
-}
-function updateNoteCount(charId){
-  const ta=document.getElementById('notes-ta-'+charId);
-  const el=document.getElementById('notes-count-'+charId);
-  if(ta&&el)el.textContent=ta.value.length+' caracteres';
-}
-
-function renderCards(list,type,charId){
-  const sel=getSel(charId);
-  if(!list.length)return`<div class="empty"><div class="empty-icon">${type==='buff'?'✦':'💀'}</div>Nenhum ${type} cadastrado.</div>`;
-  const sign=type==='buff'?'+':'−';
-  const ccls=type==='buff'?'cpos':'cneg';
-  return`<div class="card-grid">${list.map(d=>{
-    const e=sel[d.id]||{active:false,mods:{}};
-    const on=!!e.active;
-    const sc=on?(type==='buff'?'sel-buff':'sel-debuff'):'';
-    const tc=on?(type==='buff'?'on-buff':'on-debuff'):'';
-    return`<div class="dcard ${sc}">
-      <div class="dcard-top">
-        <div>
-          <div class="dcard-name">${esc(d.name)}</div>
-          <div class="dcard-cost ${ccls}">${sign}${d.baseCost} pts base</div>
-        </div>
-        <div class="ctoggle ${tc}" onclick="toggleEntry('${charId}','${d.id}')"></div>
-      </div>
-      ${d.modifiers&&d.modifiers.length?`<div class="modifiers">${d.modifiers.map(m=>{
-        const mon=!!(e.mods&&e.mods[m.id]);
-        const mtc=mon?(type==='buff'?'on-buff':'on-debuff'):'';
-        return`<div class="modifier-row ${on&&mon?'enabled':''}">
-          <div class="modifier-label">${esc(m.label)}</div>
-          <div class="modifier-cost ${ccls}">+${m.cost} pts</div>
-          <div class="mtoggle ${mtc}" onclick="${on?`toggleMod('${charId}','${d.id}','${m.id}')`:``}"></div>
-        </div>`;
-      }).join('')}</div>`:''}
-    </div>`;
-  }).join('')}</div>`;
-}
-
 function renderMain(){
   const area=document.getElementById('main-area');
-  const char=state.characters.find(c=>c.id===state.activeCharId);
+  const char=cst.characters.find(c=>c.id===cst.activeCharId);
   if(!char){area.innerHTML=`<div class="no-char"><div class="no-char-icon">🎯</div><h3>Selecione um personagem</h3><p>Crie ou selecione um personagem para começar.</p></div>`;return}
 
-  const{score,deducted,buffed,debuffLines,buffLines,currentHp,maxHp}=calcChar(char);
+  const{score,deducted,buffed,debuffLines,buffLines,currentHp,maxHp,currentSan,sanDrain,sanRestore,sanEvtDelta,bsk}=calcChar(char);
   const hpPct=Math.max(0,Math.min(100,(currentHp/maxHp)*100));
   const spct=Math.max(0,Math.min(100,(score/char.base)*100));
-  const sc=scol(score,char.base);
-  const hc=hcol(currentHp,maxHp);
-  const evts=getEvts(char.id);
-  const tab=state.activeTab;
-  const hasLines=debuffLines.length||buffLines.length;
+  const sanPct=Math.max(0,Math.min(100,(currentSan/SAN_MAX)*100));
+  const sc=scol(score,char.base);const ss=getSanState(currentSan);
+  const hpEvts=getHpEvts(char.id);const sanEvts=getSanEvts(char.id);
+  const tab=cst.activeTab;
+  const hasLines=debuffLines.length||buffLines.length||sanDrain||sanRestore;
 
   area.innerHTML=`
+    <!-- STATUS -->
     <div class="panel">
       <div class="flex-between" style="margin-bottom:18px">
         <div>
@@ -468,28 +669,51 @@ function renderMain(){
         </div>
         <button class="btn btn-ghost btn-sm" onclick="openEditChar('${char.id}')">✎ Editar</button>
       </div>
-      <div class="stat-bar-wrap">
-        <div class="stat-bar-header">
-          <div><div class="stat-label">Pontuação Final</div><div class="stat-value" style="color:${sc}">${score}</div></div>
-          <div style="text-align:right;display:flex;flex-direction:column;gap:2px">
-            <div class="stat-base">Base: ${char.base}</div>
-            ${deducted?`<div class="stat-base" style="color:var(--accent2)">−${deducted} debuffs</div>`:''}
-            ${buffed?`<div class="stat-base" style="color:var(--buff)">+${buffed} buffs</div>`:''}
-          </div>
+
+      <!-- Índice de Vitalidade (Bhaskara) -->
+      <div style="margin-bottom:20px">
+        <div class="stat-label" style="margin-bottom:6px">⚡ Índice de Vitalidade</div>
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <div class="stat-value" style="color:${bhaskCol(bsk.x)};font-size:48px">${bsk.x}</div>
+          ${bsk.collapsed?`<div style="font-size:12px;color:var(--accent2);font-family:'DM Mono',monospace;padding:4px 10px;border-radius:6px;background:#2a0808;border:1px solid var(--accent2)40">⚠ COLAPSO</div>`:''}
         </div>
-        <div class="bar-track"><div class="bar-fill" style="width:${spct}%;background:${sc}"></div></div>
-      </div>
-      <div class="hp-section">
-        <div class="stat-bar-header">
-          <div>
-            <div class="stat-label">❤ HP</div>
-            <div class="stat-value" style="color:var(--accent3)">${currentHp}<span style="font-size:16px;font-weight:400;color:var(--muted)"> / ${maxHp}</span></div>
-          </div>
+        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px;margin-bottom:10px">
+          P = ${bsk.P.toFixed(2)} &nbsp;·&nbsp;
+          H = ${bsk.H.toFixed(2)} &nbsp;·&nbsp;
+          S = ${bsk.S.toFixed(2)} &nbsp;|&nbsp;
+          A = 1 &nbsp;·&nbsp;
+          B = ${(-(bsk.P+bsk.H+bsk.S*bsk.S)).toFixed(3)} &nbsp;·&nbsp;
+          C = ${(bsk.P*bsk.H*bsk.S*bsk.S).toFixed(3)} &nbsp;·&nbsp;
+          Δ = ${bsk.delta}
         </div>
-        <div class="hp-track"><div class="hp-fill" style="width:${hpPct}%;background:var(--accent3)"></div></div>
+        <div class="bar-track" style="height:8px">
+          <div class="bar-fill" style="width:${Math.max(0,Math.min(100,bsk.x))}%;background:${bhaskCol(bsk.x)}"></div>
+        </div>
       </div>
+
+      <!-- Três valores individuais -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:4px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="stat-label" style="margin-bottom:4px">Pontuação</div>
+          <div style="font-size:22px;font-weight:800;color:${sc}">${score}</div>
+          <div class="stat-base">base ${char.base}${deducted?' · −'+deducted+' deb':''}${buffed?' · +'+buffed+' buf':''}</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px">
+          <div class="stat-label" style="margin-bottom:4px">❤ HP</div>
+          <div style="font-size:22px;font-weight:800;color:var(--accent3)">${currentHp}<span style="font-size:13px;font-weight:400;color:var(--muted)">/${maxHp}</span></div>
+          <div class="bar-track" style="height:6px;margin-top:8px"><div class="bar-fill" style="width:${hpPct}%;background:var(--accent3)"></div></div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid ${ss.color}40;border-radius:10px;padding:12px;background:${ss.bg}">
+          <div class="stat-label" style="margin-bottom:4px">🧠 Sanidade</div>
+          <div style="font-size:22px;font-weight:800;color:${ss.color}">${currentSan}<span style="font-size:13px;font-weight:400;color:var(--muted)">/${SAN_MAX}</span></div>
+          <div style="font-size:10px;color:${ss.color};margin-top:4px;font-weight:700">${ss.emoji} ${ss.label}</div>
+        </div>
+      </div>
+
+
     </div>
 
+    <!-- EFEITOS -->
     <div class="panel">
       <div class="tabs">
         <button class="tab ${tab==='debuff'?'active-debuff':''}" onclick="switchTab('debuff')">
@@ -499,70 +723,105 @@ function renderMain(){
           ✦ Buffs${buffLines.length?` <span style="font-size:10px;color:var(--buff);margin-left:4px">(${buffLines.length})</span>`:''}
         </button>
       </div>
-      ${tab==='debuff'?renderCards(state.debuffs,'debuff',char.id):renderCards(state.buffs,'buff',char.id)}
+      ${tab==='debuff'?renderCards(cst.debuffs,'debuff',char.id):renderCards(cst.buffs,'buff',char.id)}
     </div>
 
+    <!-- EVENTOS HP -->
     <div class="panel">
-      <div class="panel-title">❤ Registro de Eventos de HP <span class="chip">${evts.length} evento${evts.length!==1?'s':''}</span></div>
-      <div class="hp-form">
+      <div class="panel-title">❤ Eventos de HP <span class="chip">${hpEvts.length} evento${hpEvts.length!==1?'s':''}</span></div>
+      <div class="event-form">
         <input class="form-input" id="hp-event-desc" placeholder="Ex: Rolou dado 1, recebeu flecha, tomou poção..." onkeydown="if(event.key==='Enter')addHpEvent('${char.id}')">
         <input class="form-input" type="number" id="hp-event-val" placeholder="±pts" style="font-family:'DM Mono',monospace;text-align:center" onkeydown="if(event.key==='Enter')addHpEvent('${char.id}')">
         <button class="btn btn-ghost" onclick="addHpEvent('${char.id}')">Registrar</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:14px">Negativo = dano &nbsp;·&nbsp; Positivo = cura &nbsp;·&nbsp; Ex: −10 ou 20</div>
-      ${evts.length===0
-        ?`<div class="empty" style="padding:20px 0"><div class="empty-icon">📋</div>Nenhum evento registrado ainda.</div>`
-        :`<div class="event-list">${evts.map(e=>`
+      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px">Negativo = dano · Positivo = cura</div>
+      ${hpEvts.length===0?`<div class="empty" style="padding:16px 0"><div class="empty-icon">📋</div>Nenhum evento registrado.</div>`
+        :`<div class="event-list">${hpEvts.map(e=>`
           <div class="event-item">
             <div class="event-desc">${esc(e.desc)}</div>
-            <div class="event-val ${e.value>=0?'pos':'neg'}">${e.value>=0?'+':''}${e.value} HP</div>
+            <div class="event-val ${e.value>=0?'ev-pos':'ev-neg'}">${e.value>=0?'+':''}${e.value} HP</div>
             <div class="event-time">${fmtTime(e.ts)}</div>
             <button class="event-del" onclick="removeHpEvent('${char.id}','${e.id}')">✕</button>
           </div>`).join('')}</div>`}
     </div>
 
+    <!-- EVENTOS SANIDADE -->
     <div class="panel">
-      <div class="panel-title">
-        📝 Notas do Personagem
-        ${(state.notes[char.id]??'').length>0?`<span class="chip">${(state.notes[char.id]??'').length} car.</span>`:''}
+      <div class="panel-title" style="color:var(--muted)">🧠 Eventos de Sanidade <span class="chip">${sanEvts.length} evento${sanEvts.length!==1?'s':''}</span></div>
+      <div class="event-form">
+        <input class="form-input san-focus" id="san-event-desc" placeholder="Ex: Viu ser eldritsch, leu tomo proibido, meditou, dormiu bem..." onkeydown="if(event.key==='Enter')addSanEvent('${char.id}')">
+        <input class="form-input" type="number" id="san-event-val" placeholder="±pts" style="font-family:'DM Mono',monospace;text-align:center;border-color:rgba(192,132,252,.35)" onkeydown="if(event.key==='Enter')addSanEvent('${char.id}')">
+        <button class="btn btn-ghost" style="border-color:rgba(192,132,252,.4);color:var(--san)" onclick="addSanEvent('${char.id}')">Registrar</button>
       </div>
-      <textarea
-        class="notes-textarea"
-        id="notes-ta-${char.id}"
-        placeholder="Escreva livremente: história do personagem, estratégias de sessão, itens encontrados, aliados, observações importantes..."
-        oninput="updateNoteCount('${char.id}')"
-        onblur="saveNote('${char.id}')"
+      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px">Negativo = perda de sanidade · Positivo = recuperação</div>
+      ${sanEvts.length===0?`<div class="empty" style="padding:16px 0"><div class="empty-icon">🧠</div>Nenhum evento registrado.</div>`
+        :`<div class="event-list">${sanEvts.map(e=>`
+          <div class="event-item" style="border-left:2px solid ${e.value<0?'rgba(192,132,252,.5)':'rgba(90,255,180,.3)'}">
+            <div class="event-desc">${esc(e.desc)}</div>
+            <div class="event-val ${e.value>=0?'ev-san-pos':'ev-san-neg'}">${e.value>=0?'+':''}${e.value} 🧠</div>
+            <div class="event-time">${fmtTime(e.ts)}</div>
+            <button class="event-del" onclick="removeSanEvent('${char.id}','${e.id}')">✕</button>
+          </div>`).join('')}</div>`}
+    </div>
+
+    <!-- NOTAS -->
+    <div class="panel">
+      <div class="panel-title">📝 Notas ${(cst.notes[char.id]??'').length>0?`<span class="chip">${(cst.notes[char.id]??'').length} car.</span>`:''}</div>
+      <textarea class="notes-textarea" id="notes-ta-${char.id}"
+        placeholder="História, estratégias de sessão, itens, aliados, observações..."
+        oninput="updateNoteCount('${char.id}')" onblur="saveNote('${char.id}')"
         onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='s'){event.preventDefault();saveNote('${char.id}')}"
-      >${esc(state.notes[char.id]??'')}</textarea>
-      <div class="notes-hint">Salva automaticamente ao perder foco · Ctrl+S para salvar manualmente</div>
+      >${esc(cst.notes[char.id]??'')}</textarea>
+      <div class="notes-hint">Salva ao perder foco · Ctrl+S para salvar manualmente</div>
       <div class="notes-footer">
-        <span class="notes-count" id="notes-count-${char.id}">${(state.notes[char.id]??'').length} caracteres</span>
+        <span class="notes-count" id="notes-count-${char.id}">${(cst.notes[char.id]??'').length} caracteres</span>
         <span class="notes-saved" id="notes-saved-${char.id}">✓ salvo</span>
         <button class="btn btn-ghost btn-sm" onclick="saveNote('${char.id}')">💾 Salvar</button>
       </div>
     </div>
 
+    <!-- RESUMO -->
     ${hasLines?`
     <div class="panel">
       <div class="panel-title">Resumo do cálculo</div>
       <div class="summary-rows">
         <div class="summary-row"><span>Pontuação base</span><span style="color:var(--muted)">${char.base} pts</span></div>
-        ${debuffLines.map(l=>`<div class="summary-row"><span style="color:var(--accent2)">↓ ${esc(l.name)}${l.mods>0?` <span style="font-size:10px;color:var(--muted)">(+${l.mods} mods)</span>`:''}</span><span style="color:var(--accent2)">−${l.total} pts</span></div>`).join('')}
-        ${buffLines.map(l=>`<div class="summary-row"><span style="color:var(--buff)">↑ ${esc(l.name)}${l.mods>0?` <span style="font-size:10px;color:var(--muted)">(+${l.mods} mods)</span>`:''}</span><span style="color:var(--buff)">+${l.total} pts</span></div>`).join('')}
-        <div class="summary-row total"><span>PONTUAÇÃO FINAL</span><span>${score} pts</span></div>
+        ${debuffLines.map(l=>`<div class="summary-row">
+          <span style="color:var(--accent2)">↓ ${esc(l.name)}${l.mods>0?` <span style="font-size:10px;color:var(--muted)">(+${l.mods})</span>`:''}</span>
+          <span style="display:flex;gap:10px;align-items:center">
+            <span style="color:var(--accent2)">−${l.total} pts</span>
+            ${l.san>0?`<span style="color:var(--san);font-size:11px">−${l.san}🧠</span>`:''}
+          </span>
+        </div>`).join('')}
+        ${buffLines.map(l=>`<div class="summary-row">
+          <span style="color:var(--buff)">↑ ${esc(l.name)}${l.mods>0?` <span style="font-size:10px;color:var(--muted)">(+${l.mods})</span>`:''}</span>
+          <span style="display:flex;gap:10px;align-items:center">
+            <span style="color:var(--buff)">+${l.total} pts</span>
+            ${l.sanG>0?`<span style="color:var(--san);font-size:11px">+${l.sanG}🧠</span>`:''}
+          </span>
+        </div>`).join('')}
+        <div class="summary-divider"></div>
+        <div class="summary-row" style="background:var(--surface2)"><span style="color:var(--muted)">Pontuação</span><span style="color:${sc}">${score} pts</span></div>
+        <div class="summary-row" style="background:var(--surface2)"><span style="color:var(--muted)">HP</span><span style="color:var(--accent3)">${currentHp} / ${maxHp}</span></div>
+        <div class="summary-row" style="background:${ss.bg}"><span style="color:${ss.color}">Sanidade &nbsp; ${ss.emoji} ${ss.label}</span><span style="color:${ss.color}">${currentSan} / ${SAN_MAX}</span></div>
+        <div class="summary-divider"></div>
+        <div class="summary-row total" style="border-color:${bhaskCol(bsk.x)};color:${bhaskCol(bsk.x)}${bsk.collapsed?' — COLAPSO':''}">
+          <span>⚡ ÍNDICE DE VITALIDADE ${bsk.collapsed?'<span style="font-size:10px;color:var(--accent2)"> COLAPSO</span>':''}</span>
+          <span style="color:${bhaskCol(bsk.x)}">${bsk.x}</span>
+        </div>
       </div>
     </div>`:''}
   `;
 }
 
-function switchTab(tab){state.activeTab=tab;saveState();renderMain()}
+function switchTab(tab){cst.activeTab=tab;saveState();renderMain()}
 
 ['modal-char','modal-debuffs','modal-buffs'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id)});
 });
 document.getElementById('char-name-input').addEventListener('keydown',e=>{if(e.key==='Enter')saveChar()});
 
-renderAll();
+renderEverything();
 </script>
 </body>
 </html>
