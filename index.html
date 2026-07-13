@@ -1,827 +1,1467 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DebuffLab</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Ferro &amp; Ficha — Diário de Treino</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='28%25' r='75%25'%3E%3Cstop offset='0%25' stop-color='%23ffd75e'/%3E%3Cstop offset='55%25' stop-color='%23F2B705'/%3E%3Cstop offset='100%25' stop-color='%237a5900'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='%2314161A'/%3E%3Ccircle cx='50' cy='50' r='38' fill='url(%23g)'/%3E%3Ccircle cx='50' cy='50' r='38' fill='none' stroke='%2314161A' stroke-width='5'/%3E%3Ccircle cx='50' cy='50' r='13' fill='%2314161A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0e0f13;--surface:#16181f;--surface2:#1e2029;--border:#2a2d3a;
-    --accent:#e8ff5a;--accent2:#ff5a5a;--accent3:#5ab4ff;
-    --buff:#5affb4;--hp:#ff8c5a;--san:#c084fc;--text:#f0f0f0;--muted:#7a7f94;--radius:12px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px}
-  .logo{font-size:22px;font-weight:800;letter-spacing:-.5px}.logo span{color:var(--accent)}
-  .header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .layout{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
-  @media(max-width:900px){.layout{grid-template-columns:1fr}}
-  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
-  .panel-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
-  .btn{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-  .btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0)}
-  .btn-primary{background:var(--accent);color:#0e0f13}.btn-primary:hover{background:#f0ff7a}
-  .btn-buff{background:var(--buff);color:#0e0f13}.btn-buff:hover{background:#7affcc}
-  .btn-danger{background:transparent;border:1px solid var(--accent2);color:var(--accent2)}.btn-danger:hover{background:var(--accent2);color:#fff}
-  .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
-  .btn-sm{font-size:11px;padding:5px 10px;border-radius:6px}
-  .char-list{display:flex;flex-direction:column;gap:8px}
-  .char-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center}
-  .char-item:hover{border-color:var(--accent3)}.char-item.active{border-color:var(--accent);background:#1f2210}
-  .char-item-info{flex:1}.char-item-name{font-weight:700;font-size:14px}
-  .char-item-score{font-family:'DM Mono',monospace;font-size:11px;margin-top:3px}
-  .char-item-actions{display:flex;gap:6px;margin-left:10px}
-  .char-note-preview{font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
-  .main-area{display:flex;flex-direction:column;gap:20px}
-  .stat-bar-wrap{margin-bottom:6px}
-  .stat-bar-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
-  .stat-label{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
-  .stat-value{font-size:36px;font-weight:800;letter-spacing:-1px;transition:color .3s}
-  .stat-base{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
-  .bar-track{height:10px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
-  .bar-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1),background .3s}
-  .section-divider{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
-  .san-state-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:8px}
-  .tabs{display:flex;gap:4px;margin-bottom:16px}
-  .tab{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;padding:7px 16px;border-radius:8px;border:1px solid transparent;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
-  .tab.active-debuff{background:#1f1212;border-color:var(--accent2);color:var(--accent2)}
-  .tab.active-buff{background:#0f1f18;border-color:var(--buff);color:var(--buff)}
-  .tab:hover:not(.active-debuff):not(.active-buff){color:var(--text);border-color:var(--border)}
-  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-  .dcard{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;transition:all .15s}
-  .dcard:hover{border-color:var(--muted)}.dcard.sel-debuff{border-color:var(--accent2);background:#1f1212}.dcard.sel-buff{border-color:var(--buff);background:#0f1f18}
-  .dcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-  .dcard-name{font-weight:700;font-size:14px;line-height:1.3}
-  .dcard-cost{font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap;font-weight:500;margin-top:2px}
-  .cneg{color:var(--accent2)}.cpos{color:var(--buff)}.csan{color:var(--san)}
-  .san-badge{display:inline-flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:11px;color:var(--san);background:#1a0f2a;border:1px solid #3d2060;border-radius:6px;padding:2px 7px;margin-top:4px}
-  .ctoggle{width:36px;height:20px;border-radius:99px;background:var(--surface);border:1px solid var(--border);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
-  .ctoggle::after{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:var(--muted);top:50%;left:3px;transform:translateY(-50%);transition:all .2s}
-  .ctoggle.on-debuff{background:#3a1010;border-color:var(--accent2)}.ctoggle.on-debuff::after{left:calc(100% - 16px);background:var(--accent2)}
-  .ctoggle.on-buff{background:#0f2a1e;border-color:var(--buff)}.ctoggle.on-buff::after{left:calc(100% - 16px);background:var(--buff)}
-  .modifiers{margin-top:12px;display:flex;flex-direction:column;gap:8px}
-  .modifier-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;opacity:.4;transition:opacity .2s}
-  .modifier-row.enabled{opacity:1}.modifier-label{color:var(--text);flex:1}
-  .modifier-cost{font-family:'DM Mono',monospace;white-space:nowrap}
-  .mtoggle{width:28px;height:16px;border-radius:99px;background:var(--surface);border:1px solid var(--border);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
-  .mtoggle::after{content:'';position:absolute;width:10px;height:10px;border-radius:50%;background:var(--muted);top:50%;left:2px;transform:translateY(-50%);transition:all .2s}
-  .mtoggle.on-debuff{background:#3a1010;border-color:var(--accent2)}.mtoggle.on-debuff::after{left:calc(100% - 12px);background:var(--accent2)}
-  .mtoggle.on-buff{background:#0f2a1e;border-color:var(--buff)}.mtoggle.on-buff::after{left:calc(100% - 12px);background:var(--buff)}
-  .summary-rows{display:flex;flex-direction:column;gap:6px}
-  .summary-row{display:flex;justify-content:space-between;font-size:13px;font-family:'DM Mono',monospace;padding:8px 10px;border-radius:8px;background:var(--surface2)}
-  .summary-row.total{border:1px solid var(--accent);color:var(--accent);font-weight:700;font-size:15px}
-  .summary-row.total span:last-child{color:var(--accent)}
-  .summary-divider{height:1px;background:var(--border);margin:4px 0}
-  .event-form{display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:center;margin-bottom:10px}
-  .event-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;padding-right:2px}
-  .event-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:8px;background:var(--surface2);font-size:13px;gap:10px}
-  .event-desc{flex:1;color:var(--text)}.event-val{font-family:'DM Mono',monospace;font-weight:700;white-space:nowrap}
-  .ev-pos{color:var(--buff)}.ev-neg{color:var(--accent2)}.ev-san-pos{color:var(--san)}.ev-san-neg{color:var(--accent2)}
-  .event-time{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
-  .event-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;transition:color .15s}
-  .event-del:hover{color:var(--accent2)}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:540px;max-height:85vh;overflow-y:auto}
-  .modal h2{font-size:20px;font-weight:800;margin-bottom:20px}
-  .form-group{margin-bottom:16px}
-  .form-label{display:block;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-  .form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
-  .form-input:focus{border-color:var(--accent)}.form-input[type=number]{font-family:'DM Mono',monospace}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .mods-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-  .mod-item{display:grid;grid-template-columns:1fr 76px 76px auto;gap:8px;align-items:center}
-  .mod-item .form-input{padding:7px 10px;font-size:13px;text-align:center}
-  .mod-item .form-input:first-child{text-align:left}
-  .col-header{display:grid;grid-template-columns:1fr 76px 76px 32px;gap:8px;margin-bottom:6px}
-  .col-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:0 4px;text-align:center}
-  .col-lbl:first-child{text-align:left}
-  .icon-btn{background:transparent;border:1px solid var(--border);color:var(--accent2);border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s}
-  .icon-btn:hover{background:var(--accent2);color:#fff;border-color:var(--accent2)}
-  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-  .flex-between{display:flex;justify-content:space-between;align-items:center}
-  .chip{font-size:10px;font-weight:700;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
-  .empty{text-align:center;padding:32px 20px;color:var(--muted);font-size:13px;line-height:1.8}.empty-icon{font-size:28px;margin-bottom:8px}
-  .no-char{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--muted);border:2px dashed var(--border);border-radius:var(--radius);gap:12px}
-  .no-char-icon{font-size:48px}.no-char h3{font-size:18px;color:var(--text)}.no-char p{font-size:13px;line-height:1.7;max-width:300px}
-  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--surface2)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
-  .notes-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;line-height:1.7;resize:vertical;min-height:160px;outline:none;transition:border-color .15s}
-  .notes-textarea:focus{border-color:var(--accent3);box-shadow:0 0 0 3px rgba(90,180,255,.08)}
-  .notes-textarea::placeholder{color:var(--muted)}
-  .notes-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px}
-  .notes-count{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)}
-  .notes-saved{font-size:10px;font-family:'DM Mono',monospace;color:var(--buff);opacity:0;transition:opacity .4s}
-  .notes-hint{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:6px}
-  .san-focus:focus{border-color:var(--san)!important}
+:root{
+  --bg:#14161A; --surface:#1E2126; --surface2:#262A30; --surface3:#2E333A;
+  --border:#34383F; --text:#ECEAE4; --text-dim:#9AA0A8; --text-faint:#666B72;
+  --accent:#F2B705; --accent-ink:#1B1D22; --accent2:#3C6E91; --danger:#E2574C; --success:#5FAE72;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35);
+  --radius: 14px;
+}
+html[data-theme="light"]{
+  --bg:#F6F3EC; --surface:#FFFFFF; --surface2:#EFEBE1; --surface3:#E7E1D2;
+  --border:#DDD7C8; --text:#1B1D22; --text-dim:#5B5F66; --text-faint:#8A8D93;
+  --accent:#B8860B; --accent-ink:#FFFFFF; --accent2:#2E4057; --danger:#C43D33; --success:#3E7D4F;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;transition:background .2s,color .2s;}
+h1,h2,h3,.display{font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:0.03em;font-weight:400;}
+.mono{font-family:'JetBrains Mono',monospace;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
 
-  /* CAMPANHAS */
-  .campaign-bar{display:flex;align-items:center;gap:6px;margin-bottom:24px;flex-wrap:wrap}
-  .campaign-tab{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:8px 18px;border-radius:10px;border:1px solid var(--border);cursor:pointer;background:var(--surface2);color:var(--muted);transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
-  .campaign-tab:hover{border-color:var(--accent3);color:var(--text)}
-  .campaign-tab.active{background:#1f2210;border-color:var(--accent);color:var(--accent)}
-  .campaign-tab .tab-close{font-size:12px;opacity:.5;margin-left:2px;line-height:1;padding:0 2px;border-radius:3px;transition:opacity .15s}
-  .campaign-tab .tab-close:hover{opacity:1;color:var(--accent2)}
-  .campaign-tab-add{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:8px 14px;border-radius:10px;border:1px dashed var(--border);cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
-  .campaign-tab-add:hover{border-color:var(--accent);color:var(--accent)}
+#app{max-width:1100px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:40;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:14px 18px;}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;}
+.brand-plate{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%, var(--accent), #8a6300 75%);box-shadow:inset 0 0 0 4px var(--bg), inset 0 0 0 5px var(--border);flex-shrink:0;}
+.brand h1{font-size:22px;margin:0;line-height:1;}
+.brand span{display:block;font-size:10px;color:var(--text-faint);letter-spacing:0.15em;text-transform:uppercase;font-family:'Inter';}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;}
+nav.tabs button{background:transparent;border:none;color:var(--text-dim);padding:8px 12px;border-radius:10px;font-size:13px;font-weight:600;white-space:nowrap;}
+nav.tabs button.active{background:var(--surface2);color:var(--accent);}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+
+main{flex:1;padding:20px 18px 90px;}
+.view{display:none;animation:fade .25s ease;}
+.view.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+/* Bottom nav for mobile */
+.bottom-nav{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);display:none;justify-content:space-around;padding:6px 0 10px;z-index:40;}
+.bottom-nav button{background:none;border:none;color:var(--text-dim);font-size:10px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 8px;font-weight:600;}
+.bottom-nav button .bn-icon{font-size:18px;}
+.bottom-nav button.active{color:var(--accent);}
+@media (max-width:760px){
+  nav.tabs{display:none;}
+  .bottom-nav{display:flex;}
+  main{padding-bottom:80px;}
+}
+
+/* Cards & layout helpers */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.grid{display:grid;gap:14px;}
+.grid-2{grid-template-columns:1fr 1fr;}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+@media (max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+.row{display:flex;gap:10px;align-items:center;}
+.between{justify-content:space-between;}
+.wrap{flex-wrap:wrap;}
+.muted{color:var(--text-dim);}
+.faint{color:var(--text-faint);font-size:12px;}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-title h2{font-size:26px;margin:0;}
+
+/* Buttons */
+.btn{border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;border:1px solid var(--border);background:var(--surface2);color:var(--text);}
+.btn:active{transform:scale(0.98);}
+.btn-primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+.btn-danger{background:transparent;color:var(--danger);border-color:var(--danger);}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text-dim);}
+.btn-block{width:100%;}
+.btn-sm{padding:6px 10px;font-size:12px;border-radius:8px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Hero start button */
+.hero-start{background:linear-gradient(135deg,var(--surface2),var(--surface));border:1px solid var(--border);border-radius:20px;padding:26px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden;}
+.hero-start .plate{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#ffd75e,var(--accent) 55%,#7a5900 100%);box-shadow:0 0 0 6px var(--bg), 0 0 0 8px var(--border), var(--shadow);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;}
+.hero-start .info h2{margin:0 0 2px;font-size:28px;}
+.hero-start .info p{margin:0;color:var(--text-dim);font-size:13px;}
+.hero-start .go{margin-left:auto;}
+
+/* stat mini cards */
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:left;}
+.stat-card .num{font-family:'JetBrains Mono';font-size:28px;color:var(--accent);}
+.stat-card .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);}
+
+/* list items */
+.list-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;gap:12px;align-items:center;}
+.list-item .tag{font-size:10px;text-transform:uppercase;letter-spacing:.06em;background:var(--surface3);color:var(--text-dim);padding:3px 8px;border-radius:20px;}
+.list-item .main{flex:1;min-width:0;}
+.list-item .main h3{margin:0 0 3px;font-size:17px;font-family:'Inter';font-weight:700;}
+.list-item .actions{display:flex;gap:6px;flex-shrink:0;}
+
+/* forms */
+label{display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;font-size:14px;font-family:inherit;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+textarea{resize:vertical;min-height:60px;}
+.field{margin-bottom:12px;}
+input[type=range]{accent-color:var(--accent);padding:0;}
+
+/* modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center;z-index:100;animation:fadeIn .15s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@media (min-width:640px){.modal-backdrop{align-items:center;}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;max-width:560px;width:100%;max-height:92vh;overflow-y:auto;padding:20px;}
+@media (min-width:640px){.modal{border-radius:20px;}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.modal-head h2{margin:0;font-size:24px;}
+
+/* exercise row in workout editor */
+.ex-row{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;}
+.ex-row .top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.ex-row .meta{font-size:12px;color:var(--text-dim);margin-top:4px;}
+
+/* session runner */
+.timer-box{text-align:center;padding:20px 0;}
+.timer-box .t{font-family:'JetBrains Mono';font-size:44px;color:var(--accent);letter-spacing:2px;}
+.ex-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.ex-card.done{border-color:var(--success);}
+.ex-card .head{display:flex;justify-content:space-between;align-items:center;}
+.ex-card .planned{font-size:12px;color:var(--text-faint);margin-top:2px;}
+.set-row{display:grid;grid-template-columns:28px 1fr 1fr 1fr;gap:8px;align-items:center;margin-top:8px;}
+.set-row span{font-size:12px;color:var(--text-faint);text-align:center;}
+.set-row input{padding:8px;text-align:center;}
+
+/* history */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.filters select,.filters input{width:auto;flex:1;min-width:120px;}
+
+/* toast */
+#toast-root{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.toast{background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);animation:fadeIn .15s ease;}
+.toast.error{border-color:var(--danger);color:var(--danger);}
+.toast.success{border-color:var(--success);color:var(--success);}
+
+.empty{text-align:center;padding:40px 16px;color:var(--text-faint);}
+.empty .big{font-size:38px;margin-bottom:8px;}
+
+canvas{width:100%;display:block;}
+.chart-card h3{margin:0 0 10px;font-size:15px;font-family:'Inter';font-weight:700;}
+
+.reorder-btns{display:flex;flex-direction:column;gap:2px;}
+.reorder-btns button{width:22px;height:20px;font-size:10px;padding:0;border-radius:5px;}
+
+.badge-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+
+.dropzone{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;color:var(--text-dim);font-size:13px;}
+.check-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);margin-bottom:8px;font-weight:500;text-transform:none;}
+.check-row input{width:auto;}
 </style>
 </head>
 <body>
-
-<header>
-  <div class="logo">Debuff<span>Lab</span></div>
-  <div class="header-actions">
-    <button class="btn btn-ghost" onclick="openBuffEditor()">✦ Gerenciar Buffs</button>
-    <button class="btn btn-ghost" onclick="openDebuffEditor()">⚙ Gerenciar Debuffs</button>
-    <span id="save-indicator" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;opacity:0;transition:opacity .4s">✓ salvo</span>
-    <button class="btn btn-primary" onclick="openNewChar()">+ Novo Personagem</button>
-  </div>
-</header>
-
-<div class="campaign-bar" id="campaign-bar"></div>
-<div class="layout">
-  <div>
-    <div class="panel">
-      <div class="panel-title">Personagens <span id="char-count" class="chip">0</span></div>
-      <div class="char-list" id="char-list">
-        <div class="empty"><div class="empty-icon">🧙</div>Nenhum personagem ainda.</div>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-plate"></div>
+      <div>
+        <h1>Ferro &amp; Ficha</h1>
+        <span>diário de treino local</span>
       </div>
     </div>
-  </div>
-  <div class="main-area" id="main-area">
-    <div class="no-char"><div class="no-char-icon">🎯</div><h3>Selecione um personagem</h3><p>Crie ou selecione um personagem para começar.</p></div>
-  </div>
-</div>
+    <nav class="tabs" id="tabs-desktop"></nav>
+    <button class="icon-btn" id="theme-toggle" title="Alternar tema">🌙</button>
+  </header>
 
-<!-- MODAL: personagem -->
-<div class="modal-overlay" id="modal-char" style="display:none">
-  <div class="modal">
-    <h2 id="modal-char-title">Novo Personagem</h2>
-    <div class="form-group"><label class="form-label">Nome</label><input class="form-input" id="char-name-input" placeholder="Ex: Guerreiro das Sombras"></div>
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">Pontuação Base</label><input class="form-input" type="number" id="char-score-input" value="100"></div>
-      <div class="form-group"><label class="form-label">HP Máximo</label><input class="form-input" type="number" id="char-hp-input" value="100"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('modal-char')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveChar()">Salvar</button>
-    </div>
-  </div>
-</div>
+  <main id="views"></main>
 
-<!-- MODAL: debuffs -->
-<div class="modal-overlay" id="modal-debuffs" style="display:none">
-  <div class="modal">
-    <h2>Gerenciar Debuffs</h2>
-    <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:14px">Cada debuff pode ter um custo de pontuação <span style="color:var(--accent2)">e/ou</span> um custo de sanidade <span style="color:var(--san)">🧠</span></div>
-    <div id="debuffs-editor-list" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px;max-height:52vh;overflow-y:auto;padding-right:4px"></div>
-    <button class="btn btn-ghost" style="width:100%" onclick="addNewDebuffEntry()">+ Adicionar Debuff</button>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-debuffs')">Cancelar</button><button class="btn btn-primary" onclick="saveDebuffs()">Salvar</button></div>
-  </div>
+  <nav class="bottom-nav" id="tabs-mobile"></nav>
 </div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
 
-<!-- MODAL: buffs -->
-<div class="modal-overlay" id="modal-buffs" style="display:none">
-  <div class="modal">
-    <h2>Gerenciar Buffs</h2>
-    <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:14px">Cada buff pode ganhar pontuação <span style="color:var(--buff)">e/ou</span> restaurar sanidade <span style="color:var(--san)">🧠</span></div>
-    <div id="buffs-editor-list" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px;max-height:52vh;overflow-y:auto;padding-right:4px"></div>
-    <button class="btn btn-ghost" style="width:100%" onclick="addNewBuffEntry()">+ Adicionar Buff</button>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modal-buffs')">Cancelar</button><button class="btn btn-buff" onclick="saveBuffs()">Salvar</button></div>
-  </div>
-</div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-function uid(){return '_'+Math.random().toString(36).slice(2,9)}
+/* =========================================================================
+   FERRO & FICHA — Diário de Treino
+   Camada de dados (IndexedDB) desacoplada da interface, para permitir troca
+   futura por uma API/servidor remoto sem reescrever as telas.
+   ========================================================================= */
 
-// ══════════════════════════════════════
-//  CONSTANTES
-// ══════════════════════════════════════
-const STORAGE_KEY = 'debufflab_v4';
-const SAN_MAX = 50;
+const DB_NAME = 'ferroFichaDB';
+const DB_VERSION = 1;
+const STORES = ['gyms','workouts','sessions'];
 
-const SAN_STATES = [
-  { min:42, label:'São',               color:'#5affb4', bg:'#071a10', emoji:'🟢' },
-  { min:32, label:'Abalado',           color:'#a3e635', bg:'#182500', emoji:'🟡' },
-  { min:22, label:'Perturbado',        color:'#facc15', bg:'#221a00', emoji:'🟠' },
-  { min:12, label:'Instável',          color:'#fb923c', bg:'#221000', emoji:'🔴' },
-  { min: 1, label:'À beira do abismo', color:'#f87171', bg:'#220606', emoji:'💀' },
-  { min: 0, label:'Louco',             color:'#c084fc', bg:'#150520', emoji:'🌀' },
-];
-function getSanState(san){ return SAN_STATES.find(s=>san>=s.min)??SAN_STATES[SAN_STATES.length-1] }
+function uid(){ return (crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2)); }
 
-// ══════════════════════════════════════
-//  DEFAULTS
-// ══════════════════════════════════════
-const DEFAULT_DEBUFFS = [
-  {id:'d1',name:'Cego',              baseCost:10,sanCost:0, modifiers:[{id:'m1d1',label:'Permanente',cost:5,sanCost:0},{id:'m2d1',label:'Afeta magia também',cost:5,sanCost:2}]},
-  {id:'d2',name:'Lentidão',          baseCost:8, sanCost:0, modifiers:[{id:'m1d2',label:'Grave (-75% vel.)',cost:7,sanCost:0},{id:'m2d2',label:'Imobilizado',cost:12,sanCost:3}]},
-  {id:'d3',name:'Envenenado',        baseCost:12,sanCost:2, modifiers:[{id:'m1d3',label:'Veneno forte',cost:8,sanCost:3},{id:'m2d3',label:'Incurável',cost:10,sanCost:5}]},
-  {id:'d4',name:'Maldição de Ataque',baseCost:15,sanCost:5, modifiers:[{id:'m1d4',label:'Afeta habilidades especiais',cost:10,sanCost:3}]},
-  {id:'d5',name:'Fraqueza',          baseCost:7, sanCost:0, modifiers:[{id:'m1d5',label:'Extrema (-50% força)',cost:8,sanCost:2},{id:'m2d5',label:'Permanente',cost:6,sanCost:4},{id:'m3d5',label:'Afeta toda a party',cost:15,sanCost:8}]},
-  {id:'d6',name:'Silenciado',        baseCost:9, sanCost:3, modifiers:[{id:'m1d6',label:'Não pode comunicar',cost:5,sanCost:5}]},
-];
-const DEFAULT_BUFFS = [
-  {id:'b1',name:'Bem Descansado', baseCost:10,sanGain:3, modifiers:[{id:'mb1b1',label:'Sono profundo',cost:5,sanGain:2}]},
-  {id:'b2',name:'Bênção Divina',  baseCost:15,sanGain:8, modifiers:[{id:'mb1b2',label:'Bênção maior',cost:10,sanGain:5},{id:'mb2b2',label:'Permanente',cost:8,sanGain:4}]},
-  {id:'b3',name:'Poção de Força', baseCost:12,sanGain:0, modifiers:[{id:'mb1b3',label:'Poção aprimorada',cost:7,sanGain:0}]},
-  {id:'b4',name:'Inspiração',     baseCost:8, sanGain:5, modifiers:[{id:'mb1b4',label:'Inspiração lendária',cost:12,sanGain:6}]},
-  {id:'b5',name:'Proteção Mágica',baseCost:11,sanGain:2, modifiers:[{id:'mb1b5',label:'Escudo total',cost:9,sanGain:1},{id:'mb2b5',label:'Afeta aliados próximos',cost:14,sanGain:3}]},
-];
-
-// ══════════════════════════════════════
-//  STORAGE
-// ══════════════════════════════════════
-function loadState(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)return JSON.parse(r)}catch(e){}return null}
-function saveState(){
-  try{
-    // persiste tudo das campanhas + campanha ativa
-    const snap={activeCampaignId:state.activeCampaignId,campaigns:state.campaigns};
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(snap));
-    const ind=document.getElementById('save-indicator');
-    if(ind){ind.style.opacity='1';setTimeout(()=>ind.style.opacity='0',1400)}
-  }catch(e){}
+function plannedSummary(plannedSets){
+  if(!plannedSets || !plannedSets.length) return 'sem séries definidas';
+  return plannedSets.length+' séries: '+plannedSets.map(s=> s.weight!==''&&s.weight!=null ? `${s.reps}×${s.weight}kg` : `${s.reps}reps`).join(', ');
 }
 
-// ══════════════════════════════════════
-//  ESTADO
-// ══════════════════════════════════════
-// ── estrutura de campanha padrão ──
-function newCampaign(name){
-  return {
-    id:uid(), name,
-    characters:[],activeCharId:null,
-    debuffs:JSON.parse(JSON.stringify(DEFAULT_DEBUFFS)),
-    buffs:JSON.parse(JSON.stringify(DEFAULT_BUFFS)),
-    selections:{},hpEvents:{},sanEvents:{},
-    activeTab:'debuff',notes:{}
-  };
+let _dbPromise = null;
+function openDB(){
+  if(_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e)=>{
+      const db = e.target.result;
+      STORES.forEach(s=>{ if(!db.objectStoreNames.contains(s)) db.createObjectStore(s,{keyPath:'id'}); });
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+  return _dbPromise;
 }
 
-const saved=loadState();
-const firstCampaign = saved?.campaigns?.[0] ?? newCampaign('Campanha 1');
-let state={
-  activeCampaignId: saved?.activeCampaignId ?? firstCampaign.id,
-  campaigns: saved?.campaigns ?? [firstCampaign],
+/* Generic data layer — this is the only surface that would need to change
+   if data moves from IndexedDB to a remote API. Every call above this line
+   uses these functions and never touches indexedDB directly. */
+const Data = {
+  async getAll(store){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(store,'readonly');
+      const req = tx.objectStore(store).getAll();
+      req.onsuccess = ()=>resolve(req.result||[]);
+      req.onerror = ()=>reject(req.error);
+    });
+  },
+  async get(store,id){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(store,'readonly');
+      const req = tx.objectStore(store).get(id);
+      req.onsuccess = ()=>resolve(req.result||null);
+      req.onerror = ()=>reject(req.error);
+    });
+  },
+  async put(store,obj){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(store,'readwrite');
+      tx.objectStore(store).put(obj);
+      tx.oncomplete = ()=>resolve(obj);
+      tx.onerror = ()=>reject(tx.error);
+    });
+  },
+  async delete(store,id){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(store,'readwrite');
+      tx.objectStore(store).delete(id);
+      tx.oncomplete = ()=>resolve();
+      tx.onerror = ()=>reject(tx.error);
+    });
+  },
+  async clear(store){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(store,'readwrite');
+      tx.objectStore(store).clear();
+      tx.oncomplete = ()=>resolve();
+      tx.onerror = ()=>reject(tx.error);
+    });
+  },
+  async putAll(store,arr){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(store,'readwrite');
+      const os = tx.objectStore(store);
+      arr.forEach(o=>os.put(o));
+      tx.oncomplete = ()=>resolve();
+      tx.onerror = ()=>reject(tx.error);
+    });
+  }
 };
 
-// getters da campanha ativa — simplificam o resto do código
-function camp(){ return state.campaigns.find(c=>c.id===state.activeCampaignId)??state.campaigns[0] }
-// proxy getters — tudo que o código usa como cst.X agora vira camp().X
-const stateProxy = new Proxy({},{
-  get(_,k){ return camp()[k] },
-  set(_,k,v){ camp()[k]=v; return true }
-});
-const cst = stateProxy; // alias curto
+/* ---------------------------- App state -------------------------------- */
+const state = {
+  view: 'dashboard',
+  gyms: [], workouts: [], sessions: [],
+  activeSession: null, // {workout, startTime, timerHandle, exercises:[{...,sets:[]}], gymId,...}
+  historyFilter: { date:'', gymId:'', workoutId:'' },
+  editingWorkoutDraft: null,
+};
 
-// ══════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function getSel(cid){if(!cst.selections[cid])cst.selections[cid]={};return cst.selections[cid]}
-function getHpEvts(cid){if(!cst.hpEvents[cid])cst.hpEvents[cid]=[];return cst.hpEvents[cid]}
-function getSanEvts(cid){if(!cst.sanEvents[cid])cst.sanEvents[cid]=[];return cst.sanEvents[cid]}
-function fmtTime(ts){return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+const CATEGORIES = ['Push','Pull','Legs','Upper','Lower','Full Body'];
+const MUSCLE_GROUPS = ['Peito','Costas','Ombro','Bíceps','Tríceps','Quadríceps','Posterior','Glúteos','Panturrilha','Abdômen','Antebraço','Trapézio','Corpo Todo'];
 
-// ══════════════════════════════════════
-//  CÁLCULO
-// ══════════════════════════════════════
-function calcChar(char){
-  const sel=getSel(char.id);
-  let deducted=0,buffed=0,sanDrain=0,sanRestore=0,debuffLines=[],buffLines=[];
+function toast(msg, kind=''){
+  const root = document.getElementById('toast-root');
+  const el = document.createElement('div');
+  el.className = 'toast'+(kind?' '+kind:'');
+  el.textContent = msg;
+  root.appendChild(el);
+  setTimeout(()=>el.remove(), 2600);
+}
 
-  cst.debuffs.forEach(d=>{
-    const e=sel[d.id];if(!e||!e.active)return;
-    let cost=d.baseCost,mods=0,san=d.sanCost||0,sanMods=0;
-    (d.modifiers||[]).forEach(m=>{if(e.mods?.[m.id]){cost+=m.cost;mods+=m.cost;san+=(m.sanCost||0);sanMods+=(m.sanCost||0)}});
-    deducted+=cost;sanDrain+=san;
-    debuffLines.push({name:d.name,base:d.baseCost,mods,total:cost,san,sanMods});
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function fmtDateTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDuration(sec){
+  sec = Math.max(0,Math.floor(sec));
+  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+  return (h>0? String(h).padStart(2,'0')+':':'') + String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+/* ============================== NAVIGATION ============================== */
+const TABS = [
+  {id:'dashboard', label:'Início', icon:'🏠'},
+  {id:'workouts', label:'Treinos', icon:'📋'},
+  {id:'gyms', label:'Academias', icon:'🏢'},
+  {id:'history', label:'Histórico', icon:'🕓'},
+  {id:'stats', label:'Estatísticas', icon:'📈'},
+  {id:'data', label:'Dados', icon:'💾'},
+];
+
+function renderTabs(){
+  const desktop = document.getElementById('tabs-desktop');
+  const mobile = document.getElementById('tabs-mobile');
+  desktop.innerHTML=''; mobile.innerHTML='';
+  TABS.forEach(t=>{
+    const b1 = document.createElement('button');
+    b1.textContent = t.label;
+    b1.className = state.view===t.id ? 'active':'';
+    b1.onclick = ()=>navigate(t.id);
+    desktop.appendChild(b1);
+
+    const b2 = document.createElement('button');
+    b2.className = state.view===t.id ? 'active':'';
+    b2.innerHTML = `<span class="bn-icon">${t.icon}</span>${t.label}`;
+    b2.onclick = ()=>navigate(t.id);
+    mobile.appendChild(b2);
   });
-
-  cst.buffs.forEach(b=>{
-    const e=sel[b.id];if(!e||!e.active)return;
-    let gain=b.baseCost,mods=0,sanG=b.sanGain||0,sanMods=0;
-    (b.modifiers||[]).forEach(m=>{if(e.mods?.[m.id]){gain+=m.cost;mods+=m.cost;sanG+=(m.sanGain||0);sanMods+=(m.sanGain||0)}});
-    buffed+=gain;sanRestore+=sanG;
-    buffLines.push({name:b.name,base:b.baseCost,mods,total:gain,sanG,sanMods});
-  });
-
-  const maxHp=char.maxHp??100;
-  const hpDelta=getHpEvts(char.id).reduce((a,ev)=>a+ev.value,0);
-  const currentHp=Math.max(0,Math.min(maxHp,maxHp+hpDelta));
-
-  const sanEvtDelta=getSanEvts(char.id).reduce((a,ev)=>a+ev.value,0);
-  const currentSan=Math.max(0,Math.min(SAN_MAX,SAN_MAX-sanDrain+sanRestore+sanEvtDelta));
-
-  const score=char.base-deducted+buffed;
-  const bsk=calcBhaskara(score,char.base,currentHp,maxHp,currentSan);
-  return{score,deducted,buffed,debuffLines,buffLines,currentHp,maxHp,currentSan,sanDrain,sanRestore,sanEvtDelta,bsk};
 }
 
-function scol(s,b){const p=s/b;return p>.6?'var(--buff)':p>.3?'var(--accent)':'var(--accent2)'}
-
-// ══════════════════════════════════════
-//  BHASKARA — Índice de Vitalidade
-//  A = 1  |  B = -(P + H + S²)  |  C = P·H·S²
-//  x = (-B + √(B²−4AC)) / 2  × 100
-//
-//  Sanidade domina via S² em B e C.
-//  Resultado cai monotonicamente quando P, H ou S caem.
-//  Tudo máximo ≈ 262  |  Tudo zero = 0
-// ══════════════════════════════════════
-function calcBhaskara(score, baseScore, currentHp, maxHp, currentSan){
-  const P = Math.max(0, Math.min(1, score / Math.max(1, baseScore)));
-  const H = Math.max(0, Math.min(1, currentHp / Math.max(1, maxHp)));
-  const S = Math.max(0, Math.min(1, currentSan / SAN_MAX));
-
-  const A = 1;
-  const B = -(P + H + S * S);   // sanidade ao quadrado: peso dominante
-  const C =  P * H * (S * S);   // interação tripla: alto só se todos forem altos
-
-  const delta = B*B - 4*A*C;
-  const sqrtD = delta >= 0 ? Math.sqrt(delta) : 0;
-  const x = ((-B + sqrtD) / 2) * 100;
-
-  const collapsed = delta < 0 || (P === 0 && H === 0 && S === 0);
-  const final = collapsed ? -Math.round(Math.abs(x)) : Math.round(x);
-  return { x: final, delta: Math.round(delta * 10000) / 10000, collapsed, P, H, S };
-}
-
-function bhaskCol(x){ return x > 60 ? 'var(--buff)' : x > 30 ? 'var(--accent)' : x > 0 ? 'var(--hp)' : 'var(--accent2)' }
-
-// ══════════════════════════════════════
-//  CAMPANHAS
-// ══════════════════════════════════════
-function renderCampaignBar(){
-  const bar=document.getElementById('campaign-bar');
-  bar.innerHTML=state.campaigns.map(c=>`
-    <button class="campaign-tab ${c.id===state.activeCampaignId?'active':''}" onclick="switchCampaign('${c.id}')">
-      ${esc(c.name)}
-      <span class="tab-close" onclick="event.stopPropagation();deleteCampaign('${c.id}')" title="Remover campanha">✕</span>
-    </button>`).join('')+
-    `<button class="campaign-tab-add" onclick="createCampaign()">＋ Nova campanha</button>`;
-}
-
-function switchCampaign(id){
-  state.activeCampaignId=id;
-  saveState();renderCampaignBar();renderAll();
-}
-
-function createCampaign(){
-  const name=prompt('Nome da campanha:','Campanha '+(state.campaigns.length+1));
-  if(!name||!name.trim())return;
-  const c=newCampaign(name.trim());
-  state.campaigns.push(c);
-  state.activeCampaignId=c.id;
-  saveState();renderCampaignBar();renderAll();
-}
-
-function renameCampaign(id){
-  const c=state.campaigns.find(c=>c.id===id);if(!c)return;
-  const name=prompt('Novo nome:',c.name);
-  if(!name||!name.trim())return;
-  c.name=name.trim();
-  saveState();renderCampaignBar();
-}
-
-function deleteCampaign(id){
-  if(state.campaigns.length===1){alert('Você precisa ter pelo menos uma campanha.');return}
-  if(!confirm('Remover esta campanha e todos os seus personagens?'))return;
-  state.campaigns=state.campaigns.filter(c=>c.id!==id);
-  if(state.activeCampaignId===id) state.activeCampaignId=state.campaigns[0].id;
-  saveState();renderCampaignBar();renderAll();
-}
-
-// ══════════════════════════════════════
-//  PERSONAGENS
-// ══════════════════════════════════════
-let editingCharId=null;
-function openNewChar(){
-  editingCharId=null;
-  document.getElementById('modal-char-title').textContent='Novo Personagem';
-  document.getElementById('char-name-input').value='';
-  document.getElementById('char-score-input').value='100';
-  document.getElementById('char-hp-input').value='100';
-  document.getElementById('modal-char').style.display='flex';
-  setTimeout(()=>document.getElementById('char-name-input').focus(),50);
-}
-function openEditChar(id){
-  const c=cst.characters.find(c=>c.id===id);if(!c)return;
-  editingCharId=id;
-  document.getElementById('modal-char-title').textContent='Editar Personagem';
-  document.getElementById('char-name-input').value=c.name;
-  document.getElementById('char-score-input').value=c.base;
-  document.getElementById('char-hp-input').value=c.maxHp??100;
-  document.getElementById('modal-char').style.display='flex';
-}
-function saveChar(){
-  const name=document.getElementById('char-name-input').value.trim();
-  const base=parseInt(document.getElementById('char-score-input').value)||100;
-  const maxHp=parseInt(document.getElementById('char-hp-input').value)||100;
-  if(!name){document.getElementById('char-name-input').focus();return}
-  if(editingCharId){const c=cst.characters.find(c=>c.id===editingCharId);c.name=name;c.base=base;c.maxHp=maxHp}
-  else{const c={id:uid(),name,base,maxHp};cst.characters.push(c);cst.activeCharId=c.id}
-  saveState();closeModal('modal-char');renderAll();
-}
-function deleteChar(id){
-  if(!confirm('Remover personagem?'))return;
-  if(cst.activeCharId===id){
-    const idx=cst.characters.findIndex(c=>c.id===id);
-    const nxt=cst.characters[idx+1]||cst.characters[idx-1]||null;
-    cst.activeCharId=nxt?nxt.id:null;
+function navigate(view){
+  if(state.view==='session' && view!=='session' && state.activeSession){
+    if(!confirm('Você tem um treino em andamento. Sair mesmo assim? (o progresso fica salvo)')) return;
   }
-  cst.characters=cst.characters.filter(c=>c.id!==id);
-  delete cst.selections[id];delete cst.hpEvents[id];delete cst.sanEvents[id];
-  saveState();renderAll();
-}
-function setActive(id){cst.activeCharId=id;saveState();renderAll()}
-
-// ══════════════════════════════════════
-//  EDITOR DE EFEITOS
-// ══════════════════════════════════════
-let tempDebuffs=[],tempBuffs=[];
-
-function renderEditor(cid,arr,type){
-  const el=document.getElementById(cid);
-  const vr=type==='buff'?'tempBuffs':'tempDebuffs';
-  const rfn=type==='buff'?'removeBuffEntry':'removeDebuffEntry';
-  const amfn=type==='buff'?'addBuffMod':'addDebuffMod';
-  const rmfn=type==='buff'?'removeBuffMod':'removeDebuffMod';
-  const sf=type==='buff'?'sanGain':'sanCost';
-  const slbl=type==='buff'?'🧠 +San':'🧠 −San';
-  if(!arr.length){el.innerHTML=`<div class="empty"><div class="empty-icon">${type==='buff'?'✦':'💀'}</div>Nenhum ${type} ainda.</div>`;return}
-  el.innerHTML=arr.map((d,di)=>`
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
-      <div class="col-header" style="margin-bottom:4px">
-        <div class="col-lbl">Nome</div>
-        <div class="col-lbl">${type==='buff'?'+ Pts':'− Pts'}</div>
-        <div class="col-lbl" style="color:var(--san)">${slbl}</div>
-        <div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 76px 76px auto;gap:8px;align-items:center;margin-bottom:12px">
-        <input class="form-input" value="${esc(d.name)}" placeholder="Nome do ${type}" oninput="${vr}[${di}].name=this.value">
-        <input class="form-input" type="number" value="${d.baseCost}" oninput="${vr}[${di}].baseCost=parseInt(this.value)||0" style="text-align:center">
-        <input class="form-input san-focus" type="number" value="${d[sf]||0}" oninput="${vr}[${di}].${sf}=parseInt(this.value)||0" style="text-align:center;border-color:rgba(192,132,252,.3)">
-        <button class="icon-btn" onclick="${rfn}(${di})">✕</button>
-      </div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Modificadores</div>
-      <div class="mods-list">${(d.modifiers||[]).map((m,mi)=>`
-        <div class="mod-item">
-          <input class="form-input" value="${esc(m.label)}" placeholder="Nome" oninput="${vr}[${di}].modifiers[${mi}].label=this.value">
-          <input class="form-input" type="number" value="${m.cost}" oninput="${vr}[${di}].modifiers[${mi}].cost=parseInt(this.value)||0" style="text-align:center">
-          <input class="form-input san-focus" type="number" value="${m[sf]||0}" oninput="${vr}[${di}].modifiers[${mi}].${sf}=parseInt(this.value)||0" style="text-align:center;border-color:rgba(192,132,252,.3)">
-          <button class="icon-btn" onclick="${rmfn}(${di},${mi})">✕</button>
-        </div>`).join('')}</div>
-      <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="${amfn}(${di})">+ Modificador</button>
-    </div>`).join('');
+  state.view = view;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el = document.getElementById('view-'+view);
+  if(el) el.classList.add('active');
+  renderTabs();
+  renderView(view);
+  window.scrollTo(0,0);
 }
 
-function openDebuffEditor(){tempDebuffs=JSON.parse(JSON.stringify(cst.debuffs));renderEditor('debuffs-editor-list',tempDebuffs,'debuff');document.getElementById('modal-debuffs').style.display='flex'}
-function openBuffEditor(){tempBuffs=JSON.parse(JSON.stringify(cst.buffs));renderEditor('buffs-editor-list',tempBuffs,'buff');document.getElementById('modal-buffs').style.display='flex'}
-function addNewDebuffEntry(){tempDebuffs.push({id:uid(),name:'',baseCost:10,sanCost:0,modifiers:[]});renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
-function addNewBuffEntry(){tempBuffs.push({id:uid(),name:'',baseCost:10,sanGain:0,modifiers:[]});renderEditor('buffs-editor-list',tempBuffs,'buff')}
-function removeDebuffEntry(i){tempDebuffs.splice(i,1);renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
-function removeBuffEntry(i){tempBuffs.splice(i,1);renderEditor('buffs-editor-list',tempBuffs,'buff')}
-function addDebuffMod(di){tempDebuffs[di].modifiers.push({id:uid(),label:'',cost:5,sanCost:0});renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
-function addBuffMod(di){tempBuffs[di].modifiers.push({id:uid(),label:'',cost:5,sanGain:0});renderEditor('buffs-editor-list',tempBuffs,'buff')}
-function removeDebuffMod(di,mi){tempDebuffs[di].modifiers.splice(mi,1);renderEditor('debuffs-editor-list',tempDebuffs,'debuff')}
-function removeBuffMod(di,mi){tempBuffs[di].modifiers.splice(mi,1);renderEditor('buffs-editor-list',tempBuffs,'buff')}
+function renderView(view){
+  if(view==='dashboard') renderDashboard();
+  else if(view==='workouts') renderWorkouts();
+  else if(view==='gyms') renderGyms();
+  else if(view==='history') renderHistory();
+  else if(view==='stats') renderStats();
+  else if(view==='data') renderDataView();
+  else if(view==='session') renderSessionRunner();
+}
 
-function cleanEntries(arr,type){
-  const sf=type==='buff'?'sanGain':'sanCost';
-  return arr.filter(d=>d.name.trim()).map(d=>{
-    if(!d.id)d.id=uid();d[sf]=d[sf]||0;
-    d.modifiers=(d.modifiers||[]).filter(m=>m.label.trim()).map(m=>({...m,id:m.id||uid(),[sf]:m[sf]||0}));
-    return d;
+/* ============================== VIEWS SETUP ============================= */
+function buildViewShells(){
+  const main = document.getElementById('views');
+  main.innerHTML = `
+    <section id="view-dashboard" class="view active"></section>
+    <section id="view-workouts" class="view"></section>
+    <section id="view-gyms" class="view"></section>
+    <section id="view-session" class="view"></section>
+    <section id="view-history" class="view"></section>
+    <section id="view-stats" class="view"></section>
+    <section id="view-data" class="view"></section>
+  `;
+}
+
+/* ============================== DASHBOARD ================================ */
+function renderDashboard(){
+  const el = document.getElementById('view-dashboard');
+  const now = new Date();
+  const monthSessions = state.sessions.filter(s=>{
+    const d = new Date(s.startTime);
+    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   });
-}
-function pruneSelections(validIds){
-  Object.keys(cst.selections).forEach(cid=>{
-    Object.keys(cst.selections[cid]).forEach(eid=>{if(!validIds.has(eid))delete cst.selections[cid][eid]});
-  });
-}
-function saveDebuffs(){
-  const c=cleanEntries(tempDebuffs,'debuff');
-  pruneSelections(new Set([...c.map(d=>d.id),...cst.buffs.map(b=>b.id)]));
-  cst.debuffs=c;saveState();closeModal('modal-debuffs');renderAll();
-}
-function saveBuffs(){
-  const c=cleanEntries(tempBuffs,'buff');
-  pruneSelections(new Set([...cst.debuffs.map(d=>d.id),...c.map(b=>b.id)]));
-  cst.buffs=c;saveState();closeModal('modal-buffs');renderAll();
+  const last = [...state.sessions].sort((a,b)=>new Date(b.startTime)-new Date(a.startTime))[0];
+  const recent = [...state.sessions].sort((a,b)=>new Date(b.startTime)-new Date(a.startTime)).slice(0,4);
+
+  el.innerHTML = `
+    <div class="hero-start" style="margin-bottom:18px;">
+      <div class="plate">🏋️</div>
+      <div class="info">
+        <h2>Bora treinar?</h2>
+        <p>${state.workouts.length? 'Escolha uma ficha e comece agora.' : 'Cadastre seu primeiro treino para começar.'}</p>
+      </div>
+      <button class="btn btn-primary go" id="btn-start-workout">Iniciar treino</button>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom:18px;">
+      <div class="stat-card"><div class="num">${monthSessions.length}</div><div class="lbl">Treinos este mês</div></div>
+      <div class="stat-card"><div class="num">${state.workouts.length}</div><div class="lbl">Fichas cadastradas</div></div>
+      <div class="stat-card"><div class="num">${last? fmtDate(last.startTime):'—'}</div><div class="lbl">Último treino</div></div>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom:18px;">
+      <button class="btn btn-block" onclick="navigate('workouts')">📋 Gerenciar treinos</button>
+      <button class="btn btn-block" onclick="navigate('history')">🕓 Ver histórico</button>
+      <button class="btn btn-block" onclick="navigate('gyms')">🏢 Academias</button>
+    </div>
+
+    <div class="section-title"><h2>Últimos treinos</h2></div>
+    <div id="dash-recent"></div>
+  `;
+  document.getElementById('btn-start-workout').onclick = openStartWorkoutModal;
+
+  const recEl = document.getElementById('dash-recent');
+  if(!recent.length){
+    recEl.innerHTML = `<div class="empty"><div class="big">🗒️</div>Nenhum treino registrado ainda.</div>`;
+  } else {
+    recEl.innerHTML = recent.map(s=>{
+      const gym = state.gyms.find(g=>g.id===s.gymId);
+      return `<div class="list-item" style="margin-bottom:8px;cursor:pointer" onclick="openHistoryDetail('${s.id}')">
+        <div class="main">
+          <h3>${escapeHtml(s.workoutName)}</h3>
+          <div class="faint">${fmtDate(s.startTime)} · ${fmtDuration(s.durationSec)} ${gym? '· '+escapeHtml(gym.name):''}</div>
+        </div>
+        <span class="tag">${s.overallRating? '★ '+s.overallRating : ''}</span>
+      </div>`;
+    }).join('');
+  }
 }
 
-// ══════════════════════════════════════
-//  TOGGLES
-// ══════════════════════════════════════
-function toggleEntry(charId,entryId){
-  const sel=getSel(charId);
-  if(!sel[entryId])sel[entryId]={active:false,mods:{}};
-  sel[entryId].active=!sel[entryId].active;
-  saveState();renderMain();
-}
-function toggleMod(charId,entryId,modId){
-  const sel=getSel(charId);
-  if(!sel[entryId])sel[entryId]={active:true,mods:{}};
-  if(!sel[entryId].mods)sel[entryId].mods={};
-  sel[entryId].mods[modId]=!sel[entryId].mods[modId];
-  saveState();renderMain();
+function openStartWorkoutModal(){
+  openModal(`
+    <div class="modal-head"><h2>Escolher treino</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="grid" style="gap:10px;margin-bottom:14px;">
+      ${state.workouts.length ? state.workouts.map(w=>`
+        <div class="list-item" style="cursor:pointer" onclick="startSession('${w.id}')">
+          <div class="main"><h3>${escapeHtml(w.name)}</h3><div class="faint">${escapeHtml(w.category)} · ${w.exercises.length} exercícios</div></div>
+          <span>▶️</span>
+        </div>`).join('') : `<div class="faint">Nenhuma ficha cadastrada ainda.</div>`}
+    </div>
+    <button class="btn btn-block" onclick="startEmptySession()">🆓 Iniciar treino vazio (sem ficha)</button>
+  `);
 }
 
-// ══════════════════════════════════════
-//  EVENTOS HP
-// ══════════════════════════════════════
-function addHpEvent(charId){
-  const de=document.getElementById('hp-event-desc'),ve=document.getElementById('hp-event-val');
-  const desc=de.value.trim(),value=parseInt(ve.value);
-  if(!desc||isNaN(value)||value===0){(!desc?de:ve).focus();return}
-  getHpEvts(charId).unshift({id:uid(),desc,value,ts:Date.now()});
-  de.value='';ve.value='';saveState();renderMain();
-}
-function removeHpEvent(charId,eventId){
-  cst.hpEvents[charId]=getHpEvts(charId).filter(e=>e.id!==eventId);
-  saveState();renderMain();
-}
-
-// ══════════════════════════════════════
-//  EVENTOS SANIDADE
-// ══════════════════════════════════════
-function addSanEvent(charId){
-  const de=document.getElementById('san-event-desc'),ve=document.getElementById('san-event-val');
-  const desc=de.value.trim(),value=parseInt(ve.value);
-  if(!desc||isNaN(value)||value===0){(!desc?de:ve).focus();return}
-  getSanEvts(charId).unshift({id:uid(),desc,value,ts:Date.now()});
-  de.value='';ve.value='';saveState();renderMain();
-}
-function removeSanEvent(charId,eventId){
-  cst.sanEvents[charId]=getSanEvts(charId).filter(e=>e.id!==eventId);
-  saveState();renderMain();
+/* ============================== WORKOUTS ================================= */
+function renderWorkouts(){
+  const el = document.getElementById('view-workouts');
+  el.innerHTML = `
+    <div class="section-title"><h2>Treinos</h2><button class="btn btn-primary" id="btn-new-workout">+ Novo treino</button></div>
+    <div class="grid" id="workouts-list" style="gap:10px;"></div>
+  `;
+  document.getElementById('btn-new-workout').onclick = ()=>openWorkoutEditor(null);
+  const list = document.getElementById('workouts-list');
+  if(!state.workouts.length){
+    list.innerHTML = `<div class="empty"><div class="big">📋</div>Nenhum treino cadastrado. Crie o primeiro!</div>`;
+    return;
+  }
+  list.innerHTML = state.workouts.map(w=>`
+    <div class="list-item">
+      <div class="main">
+        <h3>${escapeHtml(w.name)}</h3>
+        <div class="faint">${escapeHtml(w.category)} · ${w.exercises.length} exercícios ${w.description? '· '+escapeHtml(w.description):''}</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-sm" onclick="openWorkoutEditor('${w.id}')" title="Editar">✏️</button>
+        <button class="btn btn-sm" onclick="duplicateWorkout('${w.id}')" title="Duplicar">📄</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteWorkout('${w.id}')" title="Excluir">🗑️</button>
+      </div>
+    </div>
+  `).join('');
 }
 
-// ══════════════════════════════════════
-//  NOTAS
-// ══════════════════════════════════════
-function saveNote(charId){
-  const ta=document.getElementById('notes-ta-'+charId);if(!ta)return;
-  cst.notes[charId]=ta.value;saveState();
-  const s=document.getElementById('notes-saved-'+charId);
-  if(s){s.style.opacity='1';setTimeout(()=>s.style.opacity='0',1600)}
-}
-function updateNoteCount(charId){
-  const ta=document.getElementById('notes-ta-'+charId);
-  const el=document.getElementById('notes-count-'+charId);
-  if(ta&&el)el.textContent=ta.value.length+' caracteres';
+async function duplicateWorkout(id){
+  const w = state.workouts.find(x=>x.id===id);
+  if(!w) return;
+  const copy = JSON.parse(JSON.stringify(w));
+  copy.id = uid();
+  copy.name = w.name + ' (cópia)';
+  copy.exercises = copy.exercises.map(e=>({...e, id:uid()}));
+  await Data.put('workouts', copy);
+  state.workouts.push(copy);
+  renderWorkouts();
+  toast('Treino duplicado.');
 }
 
-// ══════════════════════════════════════
-//  RENDER CARDS
-// ══════════════════════════════════════
-function renderCards(list,type,charId){
-  const sel=getSel(charId);
-  if(!list.length)return`<div class="empty"><div class="empty-icon">${type==='buff'?'✦':'💀'}</div>Nenhum ${type} cadastrado.</div>`;
-  const sign=type==='buff'?'+':'−';const ccls=type==='buff'?'cpos':'cneg';
-  const sf=type==='buff'?'sanGain':'sanCost';
-  return`<div class="card-grid">${list.map(d=>{
-    const e=sel[d.id]||{active:false,mods:{}};const on=!!e.active;
-    const sc=on?(type==='buff'?'sel-buff':'sel-debuff'):'';
-    const tc=on?(type==='buff'?'on-buff':'on-debuff'):'';
-    const sv=d[sf]||0;
-    return`<div class="dcard ${sc}">
-      <div class="dcard-top">
+async function deleteWorkout(id){
+  if(!confirm('Excluir este treino? Sessões já registradas no histórico não serão apagadas.')) return;
+  await Data.delete('workouts', id);
+  state.workouts = state.workouts.filter(w=>w.id!==id);
+  renderWorkouts();
+  toast('Treino excluído.');
+}
+
+function openWorkoutEditor(id){
+  const existing = id ? state.workouts.find(w=>w.id===id) : null;
+  state.editingWorkoutDraft = existing ? JSON.parse(JSON.stringify(existing)) : {
+    id: uid(), name:'', category:'Push', description:'', exercises:[]
+  };
+  renderWorkoutEditorModal();
+}
+
+function renderWorkoutEditorModal(){
+  const d = state.editingWorkoutDraft;
+  const isNew = !state.workouts.find(w=>w.id===d.id);
+  openModal(`
+    <div class="modal-head"><h2>${isNew?'Novo treino':'Editar treino'}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Nome do treino</label><input id="wf-name" value="${escapeAttr(d.name)}" placeholder="Ex: Push Day A"></div>
+    <div class="grid grid-2">
+      <div class="field"><label>Categoria</label>
+        <select id="wf-category">
+          ${CATEGORIES.map(c=>`<option ${d.category===c?'selected':''}>${c}</option>`).join('')}
+          <option value="__custom__" ${!CATEGORIES.includes(d.category)?'selected':''}>Personalizada...</option>
+        </select>
+      </div>
+      <div class="field" id="wf-custom-cat-wrap" style="${CATEGORIES.includes(d.category)?'display:none':''}">
+        <label>Nome da categoria</label><input id="wf-custom-cat" value="${!CATEGORIES.includes(d.category)?escapeAttr(d.category):''}">
+      </div>
+    </div>
+    <div class="field"><label>Descrição (opcional)</label><textarea id="wf-desc">${escapeHtml(d.description||'')}</textarea></div>
+
+    <div class="section-title" style="margin-top:6px;"><h3 style="font-size:16px;font-family:Inter;font-weight:700;">Exercícios</h3><button class="btn btn-sm" onclick="openExerciseEditor(null)">+ Adicionar</button></div>
+    <div id="wf-exercises"></div>
+
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="saveWorkoutDraft()">Salvar treino</button>
+  `);
+  document.getElementById('wf-category').onchange = (e)=>{
+    document.getElementById('wf-custom-cat-wrap').style.display = e.target.value==='__custom__' ? '' : 'none';
+  };
+  renderExerciseList();
+}
+
+function renderExerciseList(){
+  const wrap = document.getElementById('wf-exercises');
+  const d = state.editingWorkoutDraft;
+  if(!d.exercises.length){
+    wrap.innerHTML = `<div class="faint" style="padding:8px 0;">Nenhum exercício ainda.</div>`;
+    return;
+  }
+  wrap.innerHTML = d.exercises.map((ex,i)=>`
+    <div class="ex-row">
+      <div class="top">
         <div>
-          <div class="dcard-name">${esc(d.name)}</div>
-          <div class="dcard-cost ${ccls}">${sign}${d.baseCost} pts base</div>
-          ${sv>0?`<div class="san-badge">🧠 ${type==='buff'?'+':'−'}${sv} san</div>`:''}
+          <strong>${escapeHtml(ex.name)}</strong>
+          <div class="meta">${escapeHtml(ex.muscleGroup)} · ${plannedSummary(ex.plannedSets)}</div>
         </div>
-        <div class="ctoggle ${tc}" onclick="toggleEntry('${charId}','${d.id}')"></div>
-      </div>
-      ${d.modifiers&&d.modifiers.length?`<div class="modifiers">${d.modifiers.map(m=>{
-        const mon=!!(e.mods?.[m.id]);
-        const mtc=mon?(type==='buff'?'on-buff':'on-debuff'):'';
-        const ms=m[sf]||0;
-        return`<div class="modifier-row ${on&&mon?'enabled':''}">
-          <div class="modifier-label">${esc(m.label)}</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <div class="modifier-cost ${ccls}">+${m.cost} pts</div>
-            ${ms>0?`<div class="modifier-cost csan">${type==='buff'?'+':'−'}${ms}🧠</div>`:''}
+        <div class="row">
+          <div class="reorder-btns">
+            <button class="btn btn-sm" ${i===0?'disabled':''} onclick="moveExercise(${i},-1)">▲</button>
+            <button class="btn btn-sm" ${i===d.exercises.length-1?'disabled':''} onclick="moveExercise(${i},1)">▼</button>
           </div>
-          <div class="mtoggle ${mtc}" onclick="${on?`toggleMod('${charId}','${d.id}','${m.id}')`:``}"></div>
-        </div>`;
-      }).join('')}</div>`:''}
-    </div>`;
-  }).join('')}</div>`;
+          <button class="btn btn-sm" onclick="openExerciseEditor(${i})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="removeExercise(${i})">🗑️</button>
+        </div>
+      </div>
+      ${ex.notes? `<div class="meta">📝 ${escapeHtml(ex.notes)}</div>`:''}
+    </div>
+  `).join('');
 }
 
-// ══════════════════════════════════════
-//  RENDER PRINCIPAL
-// ══════════════════════════════════════
-function closeModal(id){document.getElementById(id).style.display='none'}
-function renderAll(){renderCharList();renderMain()}
-function renderEverything(){renderCampaignBar();renderAll()}
+function moveExercise(i,dir){
+  const arr = state.editingWorkoutDraft.exercises;
+  const j = i+dir;
+  if(j<0||j>=arr.length) return;
+  [arr[i],arr[j]] = [arr[j],arr[i]];
+  renderExerciseList();
+}
+function removeExercise(i){
+  state.editingWorkoutDraft.exercises.splice(i,1);
+  renderExerciseList();
+}
 
-function renderCharList(){
-  const el=document.getElementById('char-list');
-  document.getElementById('char-count').textContent=cst.characters.length;
-  if(!cst.characters.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🧙</div>Nenhum personagem ainda.</div>`;return}
-  el.innerHTML=cst.characters.map(c=>{
-    const{score,currentHp,maxHp,currentSan,bsk}=calcChar(c);
-    const ss=getSanState(currentSan);const isAct=c.id===cst.activeCharId;
-    return`<div class="char-item ${isAct?'active':''}" onclick="setActive('${c.id}')">
-      <div class="char-item-info">
-        <div class="char-item-name">${esc(c.name)}</div>
-        <div class="char-item-score">
-          <span style="color:${bhaskCol(bsk.x)}">⚡${bsk.x}</span> ·
-          <span style="color:${scol(score,c.base)}">${score}pts</span> ·
-          <span style="color:var(--accent3)">${currentHp}HP</span> ·
-          <span style="color:${ss.color}">${ss.emoji}${currentSan}</span>
+let _exDraftSets = [];
+let _exDraftId = null;
+
+function openExerciseEditor(index){
+  const ex = (index!=null) ? state.editingWorkoutDraft.exercises[index] : {
+    id:uid(), name:'', muscleGroup:MUSCLE_GROUPS[0], plannedSets:[{reps:10,weight:''}], notes:''
+  };
+  _exDraftId = ex.id;
+  _exDraftSets = JSON.parse(JSON.stringify(ex.plannedSets));
+  const formHtml = `
+    <div class="modal-head"><h2>${index!=null?'Editar exercício':'Novo exercício'}</h2><button class="icon-btn" onclick="renderWorkoutEditorModal()">✕</button></div>
+    <div class="field"><label>Nome</label><input id="ex-name" value="${escapeAttr(ex.name)}" placeholder="Ex: Supino reto"></div>
+    <div class="field"><label>Grupo muscular</label>
+      <select id="ex-muscle">${MUSCLE_GROUPS.map(m=>`<option ${ex.muscleGroup===m?'selected':''}>${m}</option>`).join('')}</select>
+    </div>
+    <label>Séries planejadas <span class="faint" style="text-transform:none;">(cada série pode ter peso e reps diferentes — ex: pirâmide)</span></label>
+    <div class="set-row" style="grid-template-columns:28px 1fr 1fr 32px;margin-bottom:4px;">
+      <span></span><span>Reps</span><span>Peso (kg)</span><span></span>
+    </div>
+    <div id="ex-sets-list"></div>
+    <button class="btn btn-sm" style="margin:6px 0 12px;" onclick="addDraftSet()">+ Adicionar série</button>
+    <div class="field"><label>Observações</label><textarea id="ex-notes">${escapeHtml(ex.notes||'')}</textarea></div>
+    <button class="btn btn-primary btn-block" onclick="saveExercise(${index!=null?index:'null'})">Salvar exercício</button>
+  `;
+  openModal(formHtml);
+  renderDraftSetsList();
+}
+
+function renderDraftSetsList(){
+  const wrap = document.getElementById('ex-sets-list');
+  if(!wrap) return;
+  wrap.innerHTML = _exDraftSets.map((s,i)=>`
+    <div class="set-row" style="grid-template-columns:28px 1fr 1fr 32px;">
+      <span>${i+1}</span>
+      <input type="number" min="1" value="${s.reps}" onchange="updateDraftSet(${i},'reps',this.value)">
+      <input type="number" step="0.5" value="${s.weight}" onchange="updateDraftSet(${i},'weight',this.value)">
+      <button class="btn btn-sm btn-danger" ${_exDraftSets.length<=1?'disabled':''} onclick="removeDraftSet(${i})">✕</button>
+    </div>
+  `).join('');
+}
+function updateDraftSet(i,field,value){
+  _exDraftSets[i][field] = field==='weight' ? value : (parseInt(value)||1);
+}
+function addDraftSet(){
+  const last = _exDraftSets[_exDraftSets.length-1];
+  _exDraftSets.push({reps:last?last.reps:10, weight:last?last.weight:''});
+  renderDraftSetsList();
+}
+function removeDraftSet(i){
+  if(_exDraftSets.length<=1) return;
+  _exDraftSets.splice(i,1);
+  renderDraftSetsList();
+}
+
+function saveExercise(index){
+  const name = document.getElementById('ex-name').value.trim();
+  if(!name){ toast('Dê um nome ao exercício.','error'); return; }
+  const ex = {
+    id: _exDraftId,
+    name,
+    muscleGroup: document.getElementById('ex-muscle').value,
+    plannedSets: _exDraftSets.map(s=>({reps:parseInt(s.reps)||1, weight: s.weight===''||s.weight==null ? '' : parseFloat(s.weight)})),
+    notes: document.getElementById('ex-notes').value.trim(),
+  };
+  if(index!=null) state.editingWorkoutDraft.exercises[index] = ex;
+  else state.editingWorkoutDraft.exercises.push(ex);
+  renderWorkoutEditorModal();
+}
+
+async function saveWorkoutDraft(){
+  const d = state.editingWorkoutDraft;
+  const name = document.getElementById('wf-name').value.trim();
+  if(!name){ toast('Dê um nome ao treino.','error'); return; }
+  let category = document.getElementById('wf-category').value;
+  if(category==='__custom__'){
+    category = document.getElementById('wf-custom-cat').value.trim() || 'Personalizada';
+  }
+  d.name = name; d.category = category;
+  d.description = document.getElementById('wf-desc').value.trim();
+  await Data.put('workouts', d);
+  const idx = state.workouts.findIndex(w=>w.id===d.id);
+  if(idx>=0) state.workouts[idx]=d; else state.workouts.push(d);
+  closeModal();
+  renderWorkouts();
+  toast('Treino salvo.','success');
+}
+
+/* ============================== GYMS ================================= */
+function renderGyms(){
+  const el = document.getElementById('view-gyms');
+  el.innerHTML = `
+    <div class="section-title"><h2>Academias</h2><button class="btn btn-primary" id="btn-new-gym">+ Nova academia</button></div>
+    <div class="grid" id="gyms-list" style="gap:10px;"></div>
+  `;
+  document.getElementById('btn-new-gym').onclick = ()=>openGymEditor(null);
+  const list = document.getElementById('gyms-list');
+  if(!state.gyms.length){
+    list.innerHTML = `<div class="empty"><div class="big">🏢</div>Nenhuma academia cadastrada.</div>`;
+    return;
+  }
+  list.innerHTML = state.gyms.map(g=>`
+    <div class="list-item">
+      <div class="main"><h3>${escapeHtml(g.name)}</h3><div class="faint">${escapeHtml(g.city||'')} ${g.notes?'· '+escapeHtml(g.notes):''}</div></div>
+      <div class="actions">
+        <button class="btn btn-sm" onclick="openGymEditor('${g.id}')">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteGym('${g.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openGymEditor(id){
+  const g = id ? state.gyms.find(x=>x.id===id) : {id:uid(),name:'',city:'',notes:''};
+  openModal(`
+    <div class="modal-head"><h2>${id?'Editar academia':'Nova academia'}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Nome</label><input id="gym-name" value="${escapeAttr(g.name)}"></div>
+    <div class="field"><label>Cidade (opcional)</label><input id="gym-city" value="${escapeAttr(g.city||'')}"></div>
+    <div class="field"><label>Observações (opcional)</label><textarea id="gym-notes">${escapeHtml(g.notes||'')}</textarea></div>
+    <button class="btn btn-primary btn-block" onclick="saveGym('${g.id}')">Salvar</button>
+  `);
+}
+
+async function saveGym(id){
+  const name = document.getElementById('gym-name').value.trim();
+  if(!name){ toast('Dê um nome à academia.','error'); return; }
+  const g = {
+    id, name,
+    city: document.getElementById('gym-city').value.trim(),
+    notes: document.getElementById('gym-notes').value.trim(),
+  };
+  await Data.put('gyms', g);
+  const idx = state.gyms.findIndex(x=>x.id===id);
+  if(idx>=0) state.gyms[idx]=g; else state.gyms.push(g);
+  closeModal();
+  renderGyms();
+  toast('Academia salva.','success');
+}
+
+async function deleteGym(id){
+  if(!confirm('Excluir esta academia?')) return;
+  await Data.delete('gyms', id);
+  state.gyms = state.gyms.filter(g=>g.id!==id);
+  renderGyms();
+  toast('Academia excluída.');
+}
+
+/* ============================== SESSION RUNNER ============================= */
+function startSession(workoutId){
+  const w = state.workouts.find(x=>x.id===workoutId);
+  if(!w) return;
+  closeModal();
+  state.activeSession = {
+    workoutId: w.id,
+    workoutName: w.name,
+    startTime: new Date().toISOString(),
+    exercises: w.exercises.map(e=>({
+      exerciseId:e.id, name:e.name, muscleGroup:e.muscleGroup,
+      plannedSummary: plannedSummary(e.plannedSets),
+      completed:false,
+      sets: e.plannedSets.map((ps,i)=>({setNumber:i+1, weight: ps.weight===''||ps.weight==null?'':ps.weight, reps:ps.reps, notes:''}))
+    })),
+  };
+  persistActiveSession();
+  navigate('session');
+}
+
+function startEmptySession(){
+  closeModal();
+  state.activeSession = {
+    workoutId: null,
+    workoutName: 'Treino livre',
+    startTime: new Date().toISOString(),
+    exercises: [],
+  };
+  persistActiveSession();
+  navigate('session');
+}
+
+function persistActiveSession(){
+  try{ localStorage.setItem('ferroficha_active_session', JSON.stringify(state.activeSession)); }catch(e){}
+}
+function clearPersistedSession(){
+  localStorage.removeItem('ferroficha_active_session');
+}
+
+let sessionTimerHandle = null;
+function renderSessionRunner(){
+  const el = document.getElementById('view-session');
+  const s = state.activeSession;
+  if(!s){
+    el.innerHTML = `<div class="empty"><div class="big">🏋️</div>Nenhum treino em andamento.<br><button class="btn btn-primary" style="margin-top:14px;" onclick="navigate('dashboard')">Voltar ao início</button></div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="card timer-box" style="margin-bottom:16px;">
+      <div class="faint">${escapeHtml(s.workoutName)}</div>
+      <div class="t" id="session-timer">00:00:00</div>
+      <div class="row" style="justify-content:center;gap:8px;margin-top:8px;">
+        <button class="btn" onclick="openAddExerciseToSession()">+ Adicionar exercício</button>
+        <button class="btn btn-danger" onclick="finishSessionPrompt()">Finalizar treino</button>
+      </div>
+    </div>
+    <div id="session-exercises"></div>
+  `;
+  renderSessionExercises();
+  if(sessionTimerHandle) clearInterval(sessionTimerHandle);
+  const tick = ()=>{
+    const secs = (Date.now() - new Date(s.startTime).getTime())/1000;
+    const elTimer = document.getElementById('session-timer');
+    if(elTimer) elTimer.textContent = fmtDuration(secs);
+  };
+  tick();
+  sessionTimerHandle = setInterval(tick,1000);
+}
+
+function renderSessionExercises(){
+  const wrap = document.getElementById('session-exercises');
+  const s = state.activeSession;
+  if(!s.exercises.length){
+    wrap.innerHTML = `<div class="empty"><div class="big">🆓</div>Nenhum exercício ainda. Use "+ Adicionar exercício" acima.</div>`;
+    return;
+  }
+  wrap.innerHTML = s.exercises.map((ex,ei)=>`
+    <div class="ex-card ${ex.completed?'done':''}" id="ex-card-${ei}">
+      <div class="head">
+        <div>
+          <strong>${escapeHtml(ex.name)}</strong>
+          <div class="planned">${escapeHtml(ex.muscleGroup)}${ex.plannedSummary? ' · planejado '+escapeHtml(ex.plannedSummary):''}</div>
         </div>
-        ${(cst.notes[c.id]??'').trim()?`<div class="char-note-preview">📝 ${esc((cst.notes[c.id]??'').slice(0,50))}${(cst.notes[c.id]??'').length>50?'…':''}</div>`:''}
+        <div class="row" style="gap:8px;">
+          <label style="display:flex;align-items:center;gap:6px;text-transform:none;font-size:12px;">
+            <input type="checkbox" style="width:auto;" ${ex.completed?'checked':''} onchange="toggleExerciseDone(${ei},this.checked)"> feito
+          </label>
+          <button class="btn btn-sm btn-danger" title="Remover da sessão" onclick="removeExerciseFromSession(${ei})">🗑️</button>
+        </div>
       </div>
-      <div class="char-item-actions">
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditChar('${c.id}')">✎</button>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteChar('${c.id}')">✕</button>
+      <div class="set-row"><span>#</span><span>Peso (kg)</span><span>Reps</span><span>Obs.</span></div>
+      ${ex.sets.map((set,si)=>`
+        <div class="set-row">
+          <span>${set.setNumber}</span>
+          <input type="number" step="0.5" value="${set.weight}" onchange="updateSet(${ei},${si},'weight',this.value)">
+          <input type="number" value="${set.reps}" onchange="updateSet(${ei},${si},'reps',this.value)">
+          <input type="text" value="${escapeAttr(set.notes)}" onchange="updateSet(${ei},${si},'notes',this.value)">
+        </div>
+      `).join('')}
+      <div class="row" style="margin-top:8px;">
+        <button class="btn btn-sm" onclick="addSet(${ei})">+ Série</button>
+        ${ex.sets.length>1?`<button class="btn btn-sm btn-ghost" onclick="removeSet(${ei})">− Série</button>`:''}
       </div>
+    </div>
+  `).join('');
+}
+
+function updateSet(ei,si,field,value){
+  state.activeSession.exercises[ei].sets[si][field] = field==='notes'? value : (value===''?'':parseFloat(value));
+  persistActiveSession();
+}
+function addSet(ei){
+  const ex = state.activeSession.exercises[ei];
+  const last = ex.sets[ex.sets.length-1];
+  ex.sets.push({setNumber:ex.sets.length+1, weight:last?last.weight:'', reps:last?last.reps:10, notes:''});
+  persistActiveSession();
+  renderSessionExercises();
+}
+function removeSet(ei){
+  const ex = state.activeSession.exercises[ei];
+  ex.sets.pop();
+  persistActiveSession();
+  renderSessionExercises();
+}
+function toggleExerciseDone(ei,val){
+  state.activeSession.exercises[ei].completed = val;
+  persistActiveSession();
+  document.getElementById('ex-card-'+ei).classList.toggle('done',val);
+}
+
+function removeExerciseFromSession(ei){
+  const ex = state.activeSession.exercises[ei];
+  if(!confirm(`Remover "${ex.name}" desta sessão? As séries já registradas dele se perdem.`)) return;
+  state.activeSession.exercises.splice(ei,1);
+  persistActiveSession();
+  renderSessionExercises();
+}
+
+/* Biblioteca de exercícios = todos os exercícios já usados em qualquer ficha,
+   deduplicados por nome — assim dá pra "pegar emprestado" um exercício de
+   outro treino sem precisar sair da sessão atual. */
+function getExerciseLibrary(){
+  const map = new Map();
+  state.workouts.forEach(w=> w.exercises.forEach(e=>{
+    if(!map.has(e.name)) map.set(e.name, e);
+  }));
+  return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name));
+}
+
+function openAddExerciseToSession(){
+  const lib = getExerciseLibrary();
+  const inSession = new Set(state.activeSession.exercises.map(e=>e.name));
+  openModal(`
+    <div class="modal-head"><h2>Adicionar exercício</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <p class="faint">Escolha um exercício de outra ficha ou crie um avulso, só para este treino.</p>
+    <div class="grid" style="gap:8px;max-height:280px;overflow-y:auto;margin-bottom:14px;">
+      ${lib.length ? lib.map(e=>`
+        <div class="list-item" style="cursor:${inSession.has(e.name)?'default':'pointer'};opacity:${inSession.has(e.name)?'0.45':'1'};" ${inSession.has(e.name)?'':`onclick="addLibraryExerciseToSession('${e.id}')"`}>
+          <div class="main"><h3>${escapeHtml(e.name)}</h3><div class="faint">${escapeHtml(e.muscleGroup)}</div></div>
+          ${inSession.has(e.name)? `<span class="tag">já na sessão</span>` : `<span>➕</span>`}
+        </div>`).join('') : `<div class="faint">Nenhum exercício cadastrado em fichas ainda.</div>`}
+    </div>
+    <h3 style="font-size:15px;font-family:Inter;font-weight:700;margin:0 0 8px;">Ou criar um avulso</h3>
+    <div class="field"><label>Nome</label><input id="adhoc-name" placeholder="Ex: Crucifixo inverso"></div>
+    <div class="field"><label>Grupo muscular</label>
+      <select id="adhoc-muscle">${MUSCLE_GROUPS.map(m=>`<option>${m}</option>`).join('')}</select>
+    </div>
+    <div class="grid grid-2">
+      <div class="field"><label>Séries</label><input id="adhoc-sets" type="number" min="1" value="3"></div>
+      <div class="field"><label>Repetições</label><input id="adhoc-reps" type="number" min="1" value="10"></div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="addCustomExerciseToSession()">Adicionar avulso à sessão</button>
+  `);
+}
+
+function addLibraryExerciseToSession(exerciseId){
+  const e = getExerciseLibrary().find(x=>x.id===exerciseId);
+  if(!e) return;
+  state.activeSession.exercises.push({
+    exerciseId: e.id, name:e.name, muscleGroup:e.muscleGroup,
+    plannedSummary: plannedSummary(e.plannedSets),
+    completed:false, adHoc:false,
+    sets: e.plannedSets.map((ps,i)=>({setNumber:i+1, weight: ps.weight===''||ps.weight==null?'':ps.weight, reps:ps.reps, notes:''}))
+  });
+  persistActiveSession();
+  closeModal();
+  renderSessionExercises();
+  toast('Exercício adicionado à sessão.','success');
+}
+
+function addCustomExerciseToSession(){
+  const name = document.getElementById('adhoc-name').value.trim();
+  if(!name){ toast('Dê um nome ao exercício.','error'); return; }
+  const sets = parseInt(document.getElementById('adhoc-sets').value)||1;
+  const reps = parseInt(document.getElementById('adhoc-reps').value)||1;
+  state.activeSession.exercises.push({
+    exerciseId: uid(), name, muscleGroup: document.getElementById('adhoc-muscle').value,
+    plannedSummary: plannedSummary(Array.from({length:sets},()=>({reps,weight:''}))),
+    completed:false, adHoc:true,
+    sets: Array.from({length:sets},(_,i)=>({setNumber:i+1, weight:'', reps, notes:''}))
+  });
+  persistActiveSession();
+  closeModal();
+  renderSessionExercises();
+  toast('Exercício avulso adicionado.','success');
+}
+
+function finishSessionPrompt(){
+  openModal(`
+    <div class="modal-head"><h2>Finalizar treino</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="field"><label>Nota geral da sessão (1–10)</label><input id="fs-rating" type="number" min="1" max="10" value="8"></div>
+    <div class="field"><label>Nível de energia (1–10)</label>
+      <input id="fs-energy" type="range" min="1" max="10" value="7" oninput="document.getElementById('fs-energy-val').textContent=this.value">
+      <div class="faint" style="text-align:center;">Valor: <span id="fs-energy-val">7</span></div>
+    </div>
+    <div class="field"><label>Como você estava se sentindo?</label><textarea id="fs-feeling" placeholder="Ex: disposto, um pouco cansado..."></textarea></div>
+    <div class="field"><label>Academia</label>
+      <select id="fs-gym"><option value="">— nenhuma —</option>${state.gyms.map(g=>`<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>Observações gerais</label><textarea id="fs-notes"></textarea></div>
+    <button class="btn btn-primary btn-block" onclick="finalizeSession()">Salvar sessão</button>
+  `);
+}
+
+function calcSessionVolume(exercises){
+  // Volume = soma de (repetições × peso) de cada série registrada.
+  return exercises.reduce((total,ex)=> total + ex.sets.reduce((sum,set)=>{
+    const w = parseFloat(set.weight)||0, r = parseFloat(set.reps)||0;
+    return sum + w*r;
+  },0), 0);
+}
+
+async function finalizeSession(){
+  const s = state.activeSession;
+  const endTime = new Date().toISOString();
+  const session = {
+    id: uid(),
+    workoutId: s.workoutId,
+    workoutName: s.workoutName,
+    startTime: s.startTime,
+    endTime,
+    durationSec: Math.round((new Date(endTime)-new Date(s.startTime))/1000),
+    gymId: document.getElementById('fs-gym').value || null,
+    overallRating: parseInt(document.getElementById('fs-rating').value)||null,
+    energyLevel: parseInt(document.getElementById('fs-energy').value)||null,
+    feeling: document.getElementById('fs-feeling').value.trim(),
+    notes: document.getElementById('fs-notes').value.trim(),
+    exercises: s.exercises,
+    totalVolume: calcSessionVolume(s.exercises),
+  };
+  await Data.put('sessions', session);
+  state.sessions.push(session);
+  state.activeSession = null;
+  clearPersistedSession();
+  if(sessionTimerHandle){ clearInterval(sessionTimerHandle); sessionTimerHandle=null; }
+  closeModal();
+  toast('Treino registrado! 💪','success');
+  navigate('dashboard');
+}
+
+/* ============================== HISTORY ================================= */
+function renderHistory(){
+  const el = document.getElementById('view-history');
+  el.innerHTML = `
+    <div class="section-title"><h2>Histórico</h2></div>
+    <div class="filters">
+      <input type="date" id="hf-date" value="${state.historyFilter.date}">
+      <select id="hf-gym"><option value="">Todas academias</option>${state.gyms.map(g=>`<option value="${g.id}" ${state.historyFilter.gymId===g.id?'selected':''}>${escapeHtml(g.name)}</option>`).join('')}</select>
+      <select id="hf-workout"><option value="">Todos treinos</option>${state.workouts.map(w=>`<option value="${w.id}" ${state.historyFilter.workoutId===w.id?'selected':''}>${escapeHtml(w.name)}</option>`).join('')}</select>
+      <button class="btn btn-sm" onclick="clearHistoryFilters()">Limpar</button>
+    </div>
+    <div id="history-list" class="grid" style="gap:8px;"></div>
+  `;
+  document.getElementById('hf-date').onchange = (e)=>{state.historyFilter.date=e.target.value; renderHistoryList();};
+  document.getElementById('hf-gym').onchange = (e)=>{state.historyFilter.gymId=e.target.value; renderHistoryList();};
+  document.getElementById('hf-workout').onchange = (e)=>{state.historyFilter.workoutId=e.target.value; renderHistoryList();};
+  renderHistoryList();
+}
+function clearHistoryFilters(){
+  state.historyFilter = {date:'',gymId:'',workoutId:''};
+  renderHistory();
+}
+function renderHistoryList(){
+  const f = state.historyFilter;
+  let list = [...state.sessions].sort((a,b)=>new Date(b.startTime)-new Date(a.startTime));
+  if(f.date) list = list.filter(s=> s.startTime.slice(0,10)===f.date);
+  if(f.gymId) list = list.filter(s=> s.gymId===f.gymId);
+  if(f.workoutId) list = list.filter(s=> s.workoutId===f.workoutId);
+  const wrap = document.getElementById('history-list');
+  if(!list.length){ wrap.innerHTML = `<div class="empty"><div class="big">🕓</div>Nenhuma sessão encontrada.</div>`; return; }
+  wrap.innerHTML = list.map(s=>{
+    const gym = state.gyms.find(g=>g.id===s.gymId);
+    return `<div class="list-item" style="cursor:pointer" onclick="openHistoryDetail('${s.id}')">
+      <div class="main">
+        <h3>${escapeHtml(s.workoutName)}</h3>
+        <div class="faint">${fmtDateTime(s.startTime)} · ${fmtDuration(s.durationSec)} ${gym?'· '+escapeHtml(gym.name):''}</div>
+      </div>
+      ${s.overallRating? `<span class="tag">★ ${s.overallRating}</span>`:''}
     </div>`;
   }).join('');
 }
 
-function renderMain(){
-  const area=document.getElementById('main-area');
-  const char=cst.characters.find(c=>c.id===cst.activeCharId);
-  if(!char){area.innerHTML=`<div class="no-char"><div class="no-char-icon">🎯</div><h3>Selecione um personagem</h3><p>Crie ou selecione um personagem para começar.</p></div>`;return}
-
-  const{score,deducted,buffed,debuffLines,buffLines,currentHp,maxHp,currentSan,sanDrain,sanRestore,sanEvtDelta,bsk}=calcChar(char);
-  const hpPct=Math.max(0,Math.min(100,(currentHp/maxHp)*100));
-  const spct=Math.max(0,Math.min(100,(score/char.base)*100));
-  const sanPct=Math.max(0,Math.min(100,(currentSan/SAN_MAX)*100));
-  const sc=scol(score,char.base);const ss=getSanState(currentSan);
-  const hpEvts=getHpEvts(char.id);const sanEvts=getSanEvts(char.id);
-  const tab=cst.activeTab;
-  const hasLines=debuffLines.length||buffLines.length||sanDrain||sanRestore;
-
-  area.innerHTML=`
-    <!-- STATUS -->
-    <div class="panel">
-      <div class="flex-between" style="margin-bottom:18px">
-        <div>
-          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Personagem ativo</div>
-          <div style="font-size:22px;font-weight:800">${esc(char.name)}</div>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="openEditChar('${char.id}')">✎ Editar</button>
-      </div>
-
-      <!-- Índice de Vitalidade (Bhaskara) -->
-      <div style="margin-bottom:20px">
-        <div class="stat-label" style="margin-bottom:6px">⚡ Índice de Vitalidade</div>
-        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
-          <div class="stat-value" style="color:${bhaskCol(bsk.x)};font-size:48px">${bsk.x}</div>
-          ${bsk.collapsed?`<div style="font-size:12px;color:var(--accent2);font-family:'DM Mono',monospace;padding:4px 10px;border-radius:6px;background:#2a0808;border:1px solid var(--accent2)40">⚠ COLAPSO</div>`:''}
-        </div>
-        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px;margin-bottom:10px">
-          P = ${bsk.P.toFixed(2)} &nbsp;·&nbsp;
-          H = ${bsk.H.toFixed(2)} &nbsp;·&nbsp;
-          S = ${bsk.S.toFixed(2)} &nbsp;|&nbsp;
-          A = 1 &nbsp;·&nbsp;
-          B = ${(-(bsk.P+bsk.H+bsk.S*bsk.S)).toFixed(3)} &nbsp;·&nbsp;
-          C = ${(bsk.P*bsk.H*bsk.S*bsk.S).toFixed(3)} &nbsp;·&nbsp;
-          Δ = ${bsk.delta}
-        </div>
-        <div class="bar-track" style="height:8px">
-          <div class="bar-fill" style="width:${Math.max(0,Math.min(100,bsk.x))}%;background:${bhaskCol(bsk.x)}"></div>
-        </div>
-      </div>
-
-      <!-- Três valores individuais -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:4px">
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px">
-          <div class="stat-label" style="margin-bottom:4px">Pontuação</div>
-          <div style="font-size:22px;font-weight:800;color:${sc}">${score}</div>
-          <div class="stat-base">base ${char.base}${deducted?' · −'+deducted+' deb':''}${buffed?' · +'+buffed+' buf':''}</div>
-        </div>
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px">
-          <div class="stat-label" style="margin-bottom:4px">❤ HP</div>
-          <div style="font-size:22px;font-weight:800;color:var(--accent3)">${currentHp}<span style="font-size:13px;font-weight:400;color:var(--muted)">/${maxHp}</span></div>
-          <div class="bar-track" style="height:6px;margin-top:8px"><div class="bar-fill" style="width:${hpPct}%;background:var(--accent3)"></div></div>
-        </div>
-        <div style="background:var(--surface2);border:1px solid ${ss.color}40;border-radius:10px;padding:12px;background:${ss.bg}">
-          <div class="stat-label" style="margin-bottom:4px">🧠 Sanidade</div>
-          <div style="font-size:22px;font-weight:800;color:${ss.color}">${currentSan}<span style="font-size:13px;font-weight:400;color:var(--muted)">/${SAN_MAX}</span></div>
-          <div style="font-size:10px;color:${ss.color};margin-top:4px;font-weight:700">${ss.emoji} ${ss.label}</div>
-        </div>
-      </div>
-
-
+function openHistoryDetail(id){
+  const s = state.sessions.find(x=>x.id===id);
+  if(!s) return;
+  const gym = state.gyms.find(g=>g.id===s.gymId);
+  openModal(`
+    <div class="modal-head"><h2>${escapeHtml(s.workoutName)}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="faint" style="margin-bottom:10px;">
+      ${fmtDateTime(s.startTime)} → ${fmtDateTime(s.endTime)} · duração ${fmtDuration(s.durationSec)}<br>
+      ${gym? 'Academia: '+escapeHtml(gym.name)+'<br>':''}
+      ${s.overallRating? 'Nota: '+s.overallRating+'/10 · ':''}${s.energyLevel? 'Energia: '+s.energyLevel+'/10':''}<br>
+      Volume total: <strong>${(typeof s.totalVolume==='number'? s.totalVolume : calcSessionVolume(s.exercises)).toLocaleString('pt-BR')} kg</strong>
     </div>
-
-    <!-- EFEITOS -->
-    <div class="panel">
-      <div class="tabs">
-        <button class="tab ${tab==='debuff'?'active-debuff':''}" onclick="switchTab('debuff')">
-          💀 Debuffs${debuffLines.length?` <span style="font-size:10px;color:var(--accent2);margin-left:4px">(${debuffLines.length})</span>`:''}
-        </button>
-        <button class="tab ${tab==='buff'?'active-buff':''}" onclick="switchTab('buff')">
-          ✦ Buffs${buffLines.length?` <span style="font-size:10px;color:var(--buff);margin-left:4px">(${buffLines.length})</span>`:''}
-        </button>
+    ${s.feeling? `<div class="faint" style="margin-bottom:8px;">😌 ${escapeHtml(s.feeling)}</div>`:''}
+    ${s.notes? `<div class="faint" style="margin-bottom:12px;">📝 ${escapeHtml(s.notes)}</div>`:''}
+    ${s.exercises.map(ex=>`
+      <div class="ex-row">
+        <strong>${escapeHtml(ex.name)}</strong> <span class="faint">(${escapeHtml(ex.muscleGroup)})</span>
+        <div class="meta">${ex.sets.map(set=>`${set.reps}x${set.weight||'—'}kg`).join(' · ')}</div>
       </div>
-      ${tab==='debuff'?renderCards(cst.debuffs,'debuff',char.id):renderCards(cst.buffs,'buff',char.id)}
-    </div>
-
-    <!-- EVENTOS HP -->
-    <div class="panel">
-      <div class="panel-title">❤ Eventos de HP <span class="chip">${hpEvts.length} evento${hpEvts.length!==1?'s':''}</span></div>
-      <div class="event-form">
-        <input class="form-input" id="hp-event-desc" placeholder="Ex: Rolou dado 1, recebeu flecha, tomou poção..." onkeydown="if(event.key==='Enter')addHpEvent('${char.id}')">
-        <input class="form-input" type="number" id="hp-event-val" placeholder="±pts" style="font-family:'DM Mono',monospace;text-align:center" onkeydown="if(event.key==='Enter')addHpEvent('${char.id}')">
-        <button class="btn btn-ghost" onclick="addHpEvent('${char.id}')">Registrar</button>
-      </div>
-      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px">Negativo = dano · Positivo = cura</div>
-      ${hpEvts.length===0?`<div class="empty" style="padding:16px 0"><div class="empty-icon">📋</div>Nenhum evento registrado.</div>`
-        :`<div class="event-list">${hpEvts.map(e=>`
-          <div class="event-item">
-            <div class="event-desc">${esc(e.desc)}</div>
-            <div class="event-val ${e.value>=0?'ev-pos':'ev-neg'}">${e.value>=0?'+':''}${e.value} HP</div>
-            <div class="event-time">${fmtTime(e.ts)}</div>
-            <button class="event-del" onclick="removeHpEvent('${char.id}','${e.id}')">✕</button>
-          </div>`).join('')}</div>`}
-    </div>
-
-    <!-- EVENTOS SANIDADE -->
-    <div class="panel">
-      <div class="panel-title" style="color:var(--muted)">🧠 Eventos de Sanidade <span class="chip">${sanEvts.length} evento${sanEvts.length!==1?'s':''}</span></div>
-      <div class="event-form">
-        <input class="form-input san-focus" id="san-event-desc" placeholder="Ex: Viu ser eldritsch, leu tomo proibido, meditou, dormiu bem..." onkeydown="if(event.key==='Enter')addSanEvent('${char.id}')">
-        <input class="form-input" type="number" id="san-event-val" placeholder="±pts" style="font-family:'DM Mono',monospace;text-align:center;border-color:rgba(192,132,252,.35)" onkeydown="if(event.key==='Enter')addSanEvent('${char.id}')">
-        <button class="btn btn-ghost" style="border-color:rgba(192,132,252,.4);color:var(--san)" onclick="addSanEvent('${char.id}')">Registrar</button>
-      </div>
-      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px">Negativo = perda de sanidade · Positivo = recuperação</div>
-      ${sanEvts.length===0?`<div class="empty" style="padding:16px 0"><div class="empty-icon">🧠</div>Nenhum evento registrado.</div>`
-        :`<div class="event-list">${sanEvts.map(e=>`
-          <div class="event-item" style="border-left:2px solid ${e.value<0?'rgba(192,132,252,.5)':'rgba(90,255,180,.3)'}">
-            <div class="event-desc">${esc(e.desc)}</div>
-            <div class="event-val ${e.value>=0?'ev-san-pos':'ev-san-neg'}">${e.value>=0?'+':''}${e.value} 🧠</div>
-            <div class="event-time">${fmtTime(e.ts)}</div>
-            <button class="event-del" onclick="removeSanEvent('${char.id}','${e.id}')">✕</button>
-          </div>`).join('')}</div>`}
-    </div>
-
-    <!-- NOTAS -->
-    <div class="panel">
-      <div class="panel-title">📝 Notas ${(cst.notes[char.id]??'').length>0?`<span class="chip">${(cst.notes[char.id]??'').length} car.</span>`:''}</div>
-      <textarea class="notes-textarea" id="notes-ta-${char.id}"
-        placeholder="História, estratégias de sessão, itens, aliados, observações..."
-        oninput="updateNoteCount('${char.id}')" onblur="saveNote('${char.id}')"
-        onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='s'){event.preventDefault();saveNote('${char.id}')}"
-      >${esc(cst.notes[char.id]??'')}</textarea>
-      <div class="notes-hint">Salva ao perder foco · Ctrl+S para salvar manualmente</div>
-      <div class="notes-footer">
-        <span class="notes-count" id="notes-count-${char.id}">${(cst.notes[char.id]??'').length} caracteres</span>
-        <span class="notes-saved" id="notes-saved-${char.id}">✓ salvo</span>
-        <button class="btn btn-ghost btn-sm" onclick="saveNote('${char.id}')">💾 Salvar</button>
-      </div>
-    </div>
-
-    <!-- RESUMO -->
-    ${hasLines?`
-    <div class="panel">
-      <div class="panel-title">Resumo do cálculo</div>
-      <div class="summary-rows">
-        <div class="summary-row"><span>Pontuação base</span><span style="color:var(--muted)">${char.base} pts</span></div>
-        ${debuffLines.map(l=>`<div class="summary-row">
-          <span style="color:var(--accent2)">↓ ${esc(l.name)}${l.mods>0?` <span style="font-size:10px;color:var(--muted)">(+${l.mods})</span>`:''}</span>
-          <span style="display:flex;gap:10px;align-items:center">
-            <span style="color:var(--accent2)">−${l.total} pts</span>
-            ${l.san>0?`<span style="color:var(--san);font-size:11px">−${l.san}🧠</span>`:''}
-          </span>
-        </div>`).join('')}
-        ${buffLines.map(l=>`<div class="summary-row">
-          <span style="color:var(--buff)">↑ ${esc(l.name)}${l.mods>0?` <span style="font-size:10px;color:var(--muted)">(+${l.mods})</span>`:''}</span>
-          <span style="display:flex;gap:10px;align-items:center">
-            <span style="color:var(--buff)">+${l.total} pts</span>
-            ${l.sanG>0?`<span style="color:var(--san);font-size:11px">+${l.sanG}🧠</span>`:''}
-          </span>
-        </div>`).join('')}
-        <div class="summary-divider"></div>
-        <div class="summary-row" style="background:var(--surface2)"><span style="color:var(--muted)">Pontuação</span><span style="color:${sc}">${score} pts</span></div>
-        <div class="summary-row" style="background:var(--surface2)"><span style="color:var(--muted)">HP</span><span style="color:var(--accent3)">${currentHp} / ${maxHp}</span></div>
-        <div class="summary-row" style="background:${ss.bg}"><span style="color:${ss.color}">Sanidade &nbsp; ${ss.emoji} ${ss.label}</span><span style="color:${ss.color}">${currentSan} / ${SAN_MAX}</span></div>
-        <div class="summary-divider"></div>
-        <div class="summary-row total" style="border-color:${bhaskCol(bsk.x)};color:${bhaskCol(bsk.x)}${bsk.collapsed?' — COLAPSO':''}">
-          <span>⚡ ÍNDICE DE VITALIDADE ${bsk.collapsed?'<span style="font-size:10px;color:var(--accent2)"> COLAPSO</span>':''}</span>
-          <span style="color:${bhaskCol(bsk.x)}">${bsk.x}</span>
-        </div>
-      </div>
-    </div>`:''}
-  `;
+    `).join('')}
+    <button class="btn btn-danger btn-block" style="margin-top:10px;" onclick="deleteSession('${s.id}')">Excluir sessão</button>
+  `);
+}
+async function deleteSession(id){
+  if(!confirm('Excluir esta sessão do histórico? Essa ação não pode ser desfeita.')) return;
+  await Data.delete('sessions', id);
+  state.sessions = state.sessions.filter(s=>s.id!==id);
+  closeModal();
+  renderHistory();
+  toast('Sessão excluída.');
 }
 
-function switchTab(tab){cst.activeTab=tab;saveState();renderMain()}
+/* ============================== STATS / CHARTS ============================= */
+function renderStats(){
+  const el = document.getElementById('view-stats');
+  if(!state.sessions.length){
+    el.innerHTML = `<div class="section-title"><h2>Estatísticas</h2></div><div class="empty"><div class="big">📈</div>Registre alguns treinos para ver suas estatísticas.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="section-title"><h2>Estatísticas</h2></div>
+    <div class="grid grid-2" style="margin-bottom:14px;">
+      <div class="card chart-card"><h3>Treinos por mês</h3><canvas id="chart-months" height="160"></canvas></div>
+      <div class="card chart-card"><h3>Frequência por grupo muscular</h3><canvas id="chart-muscles" height="160"></canvas></div>
+    </div>
+    <div class="card chart-card" style="margin-bottom:14px;"><h3>Volume total treinado por mês (kg × reps)</h3><canvas id="chart-volume" height="160"></canvas></div>
+    <div class="card chart-card">
+      <div class="row between" style="margin-bottom:10px;">
+        <h3 style="margin:0;">Evolução de carga por exercício</h3>
+        <select id="stat-exercise-pick" style="width:auto;"></select>
+      </div>
+      <canvas id="chart-load" height="180"></canvas>
+    </div>
+  `;
+  drawMonthsChart();
+  drawMuscleChart();
+  drawVolumeChart();
+  setupExercisePicker();
+}
 
-['modal-char','modal-debuffs','modal-buffs'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id)});
-});
-document.getElementById('char-name-input').addEventListener('keydown',e=>{if(e.key==='Enter')saveChar()});
+function monthKey(iso){ const d=new Date(iso); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function monthLabel(key){ const [y,m]=key.split('-'); return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(m)-1]+'/'+y.slice(2); }
 
-renderEverything();
+function lastNMonthKeys(n){
+  const arr=[]; const d=new Date();
+  for(let i=n-1;i>=0;i--){ const dd=new Date(d.getFullYear(),d.getMonth()-i,1); arr.push(dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')); }
+  return arr;
+}
+
+function drawMonthsChart(){
+  const keys = lastNMonthKeys(6);
+  const counts = keys.map(k=> state.sessions.filter(s=>monthKey(s.startTime)===k).length);
+  drawBarChart('chart-months', keys.map(monthLabel), counts, getVar('--accent'));
+}
+function drawMuscleChart(){
+  const counts = {};
+  state.sessions.forEach(s=> s.exercises.forEach(ex=>{ counts[ex.muscleGroup]=(counts[ex.muscleGroup]||0)+1; }));
+  const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  drawBarChart('chart-muscles', entries.map(e=>e[0]), entries.map(e=>e[1]), getVar('--accent2'));
+}
+function drawVolumeChart(){
+  const keys = lastNMonthKeys(6);
+  const vol = keys.map(k=>{
+    return state.sessions.filter(s=>monthKey(s.startTime)===k).reduce((sum,s)=>{
+      return sum + (typeof s.totalVolume==='number' ? s.totalVolume : calcSessionVolume(s.exercises));
+    },0);
+  });
+  drawLineChart('chart-volume', keys.map(monthLabel), vol, getVar('--success'));
+}
+function setupExercisePicker(){
+  const names = [...new Set(state.sessions.flatMap(s=>s.exercises.map(e=>e.name)))];
+  const sel = document.getElementById('stat-exercise-pick');
+  sel.innerHTML = names.map(n=>`<option>${escapeHtml(n)}</option>`).join('');
+  sel.onchange = ()=>drawLoadChart(sel.value);
+  if(names.length) drawLoadChart(names[0]);
+}
+function drawLoadChart(exerciseName){
+  const points = [];
+  [...state.sessions].sort((a,b)=>new Date(a.startTime)-new Date(b.startTime)).forEach(s=>{
+    const ex = s.exercises.find(e=>e.name===exerciseName);
+    if(!ex) return;
+    const maxLoad = Math.max(...ex.sets.map(set=>parseFloat(set.weight)||0));
+    points.push({label:fmtDate(s.startTime), value:maxLoad});
+  });
+  drawLineChart('chart-load', points.map(p=>p.label), points.map(p=>p.value), getVar('--accent'));
+}
+
+function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#F2B705'; }
+
+function setupCanvas(id){
+  const canvas = document.getElementById(id);
+  if(!canvas) return null;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth || 300, h = parseInt(canvas.getAttribute('height'))||160;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);
+  return {ctx,w,h};
+}
+
+function drawBarChart(id,labels,values,color){
+  const setup = setupCanvas(id); if(!setup) return;
+  const {ctx,w,h} = setup;
+  const padL=30, padB=26, padT=10, padR=8;
+  const max = Math.max(1,...values);
+  const chartW = w-padL-padR, chartH = h-padT-padB;
+  const barW = chartW/labels.length*0.6;
+  const gap = chartW/labels.length;
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath();
+  for(let i=0;i<=3;i++){ const y=padT+chartH-(chartH*i/3); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); }
+  ctx.stroke();
+  ctx.fillStyle = getVar('--text-faint'); ctx.font='10px Inter';
+  labels.forEach((lab,i)=>{
+    const x = padL + gap*i + (gap-barW)/2;
+    const barH = (values[i]/max)*chartH;
+    ctx.fillStyle = color;
+    roundRect(ctx, x, padT+chartH-barH, barW, barH, 3);
+    ctx.fillStyle = getVar('--text-faint');
+    ctx.textAlign='center';
+    ctx.fillText(String(lab).slice(0,6), x+barW/2, h-8);
+    ctx.fillStyle = getVar('--text');
+    ctx.fillText(String(values[i]), x+barW/2, padT+chartH-barH-4);
+  });
+}
+function drawLineChart(id,labels,values,color){
+  const setup = setupCanvas(id); if(!setup) return;
+  const {ctx,w,h} = setup;
+  if(!values.length){ ctx.fillStyle=getVar('--text-faint'); ctx.fillText('Sem dados suficientes',10,h/2); return; }
+  const padL=36, padB=26, padT=14, padR=10;
+  const max = Math.max(1,...values), min = Math.min(0,...values);
+  const chartW = w-padL-padR, chartH = h-padT-padB;
+  const stepX = labels.length>1 ? chartW/(labels.length-1) : 0;
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath();
+  for(let i=0;i<=3;i++){ const y=padT+chartH-(chartH*i/3); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); }
+  ctx.stroke();
+  ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2;
+  values.forEach((v,i)=>{
+    const x = padL + stepX*i;
+    const y = padT+chartH - ((v-min)/(max-min||1))*chartH;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  ctx.fillStyle = getVar('--text-faint'); ctx.font='10px Inter'; ctx.textAlign='center';
+  values.forEach((v,i)=>{
+    const x = padL + stepX*i;
+    const y = padT+chartH - ((v-min)/(max-min||1))*chartH;
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x,y,3,0,7); ctx.fill();
+    ctx.fillStyle = getVar('--text-faint');
+    ctx.fillText(String(labels[i]).slice(0,6), x, h-8);
+  });
+}
+function roundRect(ctx,x,y,w,h,r){
+  if(h<=0) h=0.1;
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath(); ctx.fill();
+}
+
+/* ============================== DATA (EXPORT / IMPORT) ============================= */
+function renderDataView(){
+  const el = document.getElementById('view-data');
+  el.innerHTML = `
+    <div class="section-title"><h2>Dados</h2></div>
+    <div class="card" style="margin-bottom:14px;">
+      <h3 style="margin-top:0;font-size:16px;font-family:Inter;font-weight:700;">Exportar</h3>
+      <label>O que exportar</label>
+      <div class="check-row"><input type="checkbox" id="exp-workouts" checked> Treinos e exercícios</div>
+      <div class="check-row"><input type="checkbox" id="exp-gyms" checked> Academias</div>
+      <div class="check-row"><input type="checkbox" id="exp-history" checked> Histórico de sessões</div>
+      <div class="row wrap" style="margin-top:10px;">
+        <button class="btn" onclick="exportData('json')">Exportar JSON</button>
+        <button class="btn" onclick="exportData('xml')">Exportar XML</button>
+        <button class="btn" onclick="exportData('xlsx')">Exportar XLSX</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;font-size:16px;font-family:Inter;font-weight:700;">Importar backup (JSON)</h3>
+      <input type="file" id="import-file" accept="application/json">
+      <div class="faint" style="margin-top:8px;">Nada é enviado para nenhum servidor — leitura e escrita acontecem só no seu navegador.</div>
+    </div>
+  `;
+  document.getElementById('import-file').onchange = handleImportFile;
+}
+
+function getExportSelection(){
+  return {
+    workouts: document.getElementById('exp-workouts').checked,
+    gyms: document.getElementById('exp-gyms').checked,
+    history: document.getElementById('exp-history').checked,
+  };
+}
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content],{type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+function exportData(format){
+  const sel = getExportSelection();
+  if(!sel.workouts && !sel.gyms && !sel.history){ toast('Selecione ao menos uma opção.','error'); return; }
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    version: 1,
+    gyms: sel.gyms ? state.gyms : [],
+    workouts: sel.workouts ? state.workouts : [],
+    sessions: sel.history ? state.sessions : [],
+  };
+  if(format==='json'){
+    downloadBlob(JSON.stringify(payload,null,2), 'ferro-ficha-backup.json', 'application/json');
+  } else if(format==='xml'){
+    downloadBlob(buildXML(payload), 'ferro-ficha-backup.xml', 'application/xml');
+  } else if(format==='xlsx'){
+    exportXLSX(payload);
+  }
+  toast('Exportação gerada.','success');
+}
+
+function xmlEscape(s){
+  return String(s==null?'':s).replace(/[<>&'"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));
+}
+function buildXML(payload){
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<TreinoData exportadoEm="${xmlEscape(payload.exportedAt)}">\n`;
+  xml += `  <Academias>\n`;
+  payload.gyms.forEach(g=>{
+    xml += `    <Academia id="${xmlEscape(g.id)}">\n      <Nome>${xmlEscape(g.name)}</Nome>\n      <Cidade>${xmlEscape(g.city)}</Cidade>\n      <Observacoes>${xmlEscape(g.notes)}</Observacoes>\n    </Academia>\n`;
+  });
+  xml += `  </Academias>\n  <Treinos>\n`;
+  payload.workouts.forEach(w=>{
+    xml += `    <Treino id="${xmlEscape(w.id)}">\n      <Nome>${xmlEscape(w.name)}</Nome>\n      <Categoria>${xmlEscape(w.category)}</Categoria>\n      <Descricao>${xmlEscape(w.description)}</Descricao>\n      <Exercicios>\n`;
+    w.exercises.forEach(e=>{
+      xml += `        <Exercicio id="${xmlEscape(e.id)}">\n          <Nome>${xmlEscape(e.name)}</Nome>\n          <GrupoMuscular>${xmlEscape(e.muscleGroup)}</GrupoMuscular>\n          <SeriesPlanejadas>\n${e.plannedSets.map((ps,i)=>`            <Serie numero="${i+1}" repeticoes="${xmlEscape(ps.reps)}" peso="${xmlEscape(ps.weight)}"/>`).join('\n')}\n          </SeriesPlanejadas>\n          <Observacoes>${xmlEscape(e.notes)}</Observacoes>\n        </Exercicio>\n`;
+    });
+    xml += `      </Exercicios>\n    </Treino>\n`;
+  });
+  xml += `  </Treinos>\n  <Sessoes>\n`;
+  payload.sessions.forEach(s=>{
+    xml += `    <Sessao id="${xmlEscape(s.id)}">\n      <TreinoNome>${xmlEscape(s.workoutName)}</TreinoNome>\n      <Inicio>${xmlEscape(s.startTime)}</Inicio>\n      <Fim>${xmlEscape(s.endTime)}</Fim>\n      <DuracaoSegundos>${xmlEscape(s.durationSec)}</DuracaoSegundos>\n      <VolumeTotal>${xmlEscape(typeof s.totalVolume==='number'?s.totalVolume:calcSessionVolume(s.exercises))}</VolumeTotal>\n      <AcademiaId>${xmlEscape(s.gymId)}</AcademiaId>\n      <NotaGeral>${xmlEscape(s.overallRating)}</NotaGeral>\n      <NivelEnergia>${xmlEscape(s.energyLevel)}</NivelEnergia>\n      <ComoSeSentiu>${xmlEscape(s.feeling)}</ComoSeSentiu>\n      <Observacoes>${xmlEscape(s.notes)}</Observacoes>\n      <ExerciciosRealizados>\n`;
+    s.exercises.forEach(ex=>{
+      xml += `        <Exercicio nome="${xmlEscape(ex.name)}" grupoMuscular="${xmlEscape(ex.muscleGroup)}">\n          <Series>\n`;
+      ex.sets.forEach(set=>{
+        xml += `            <Serie numero="${xmlEscape(set.setNumber)}" peso="${xmlEscape(set.weight)}" repeticoes="${xmlEscape(set.reps)}" observacoes="${xmlEscape(set.notes)}"/>\n`;
+      });
+      xml += `          </Series>\n        </Exercicio>\n`;
+    });
+    xml += `      </ExerciciosRealizados>\n    </Sessao>\n`;
+  });
+  xml += `  </Sessoes>\n</TreinoData>`;
+  return xml;
+}
+
+function exportXLSX(payload){
+  if(typeof XLSX === 'undefined'){ toast('Biblioteca XLSX indisponível offline. Conecte-se à internet ao menos uma vez para carregá-la.','error'); return; }
+  const wb = XLSX.utils.book_new();
+
+  const treinosRows = [['ID','Nome','Categoria','Descrição']];
+  payload.workouts.forEach(w=> treinosRows.push([w.id,w.name,w.category,w.description]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(treinosRows), 'Treinos');
+
+  const exRows = [['ID','TreinoID','Nome','GrupoMuscular','SériesPlanejadas','PlanoDeSéries (reps×peso)','Observações']];
+  payload.workouts.forEach(w=> w.exercises.forEach(e=> exRows.push([e.id,w.id,e.name,e.muscleGroup,e.plannedSets.length,e.plannedSets.map(ps=>`${ps.reps}×${ps.weight||'-'}kg`).join(' / '),e.notes])));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(exRows), 'Exercicios');
+
+  const gymRows = [['ID','Nome','Cidade','Observações']];
+  payload.gyms.forEach(g=> gymRows.push([g.id,g.name,g.city,g.notes]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(gymRows), 'Academias');
+
+  const sessRows = [['ID','TreinoNome','Início','Fim','DuraçãoSeg','VolumeTotal','AcademiaID','NotaGeral','NívelEnergia','ComoSeSentiu','Observações']];
+  payload.sessions.forEach(s=> sessRows.push([s.id,s.workoutName,s.startTime,s.endTime,s.durationSec,(typeof s.totalVolume==='number'?s.totalVolume:calcSessionVolume(s.exercises)),s.gymId,s.overallRating,s.energyLevel,s.feeling,s.notes]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sessRows), 'Sessoes');
+
+  const setRows = [['SessaoID','ExercicioNome','GrupoMuscular','NúmeroSérie','Peso','Repetições','Observações']];
+  payload.sessions.forEach(s=> s.exercises.forEach(ex=> ex.sets.forEach(set=>{
+    setRows.push([s.id, ex.name, ex.muscleGroup, set.setNumber, set.weight, set.reps, set.notes]);
+  })));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(setRows), 'SeriesRealizadas');
+
+  XLSX.writeFile(wb, 'ferro-ficha-backup.xlsx');
+}
+
+function handleImportFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    let data;
+    try{ data = JSON.parse(ev.target.result); }
+    catch(err){ toast('Arquivo JSON inválido.','error'); return; }
+    if(!data || !Array.isArray(data.workouts) || !Array.isArray(data.gyms) || !Array.isArray(data.sessions)){
+      toast('Estrutura do backup não reconhecida. Esperado: gyms, workouts, sessions.','error');
+      return;
+    }
+    openImportConfirm(data);
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+let _pendingImportData = null;
+function openImportConfirm(data){
+  _pendingImportData = data;
+  openModal(`
+    <div class="modal-head"><h2>Importar backup</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <p class="faint">Encontrado: ${data.workouts.length} treinos, ${data.gyms.length} academias, ${data.sessions.length} sessões.</p>
+    <p>Como deseja aplicar este backup?</p>
+    <div class="grid" style="gap:8px;">
+      <button class="btn" onclick="applyImport('merge')">Mesclar com dados atuais</button>
+      <button class="btn btn-danger" onclick="applyImport('replace')">Substituir todos os dados atuais</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  `);
+}
+
+async function applyImport(mode){
+  const data = _pendingImportData;
+  if(!data) return;
+  normalizeWorkoutsArray(data.workouts);
+  if(mode==='replace'){
+    if(!confirm('Isso vai apagar TODOS os dados atuais e substituir pelo backup. Confirma?')) return;
+    await Data.clear('gyms'); await Data.clear('workouts'); await Data.clear('sessions');
+    await Data.putAll('gyms', data.gyms);
+    await Data.putAll('workouts', data.workouts);
+    await Data.putAll('sessions', data.sessions);
+    state.gyms = data.gyms; state.workouts = data.workouts; state.sessions = data.sessions;
+  } else {
+    await Data.putAll('gyms', data.gyms);
+    await Data.putAll('workouts', data.workouts);
+    await Data.putAll('sessions', data.sessions);
+    const mergeArr = (curr,incoming)=>{
+      const map = new Map(curr.map(x=>[x.id,x]));
+      incoming.forEach(x=>map.set(x.id,x));
+      return [...map.values()];
+    };
+    state.gyms = mergeArr(state.gyms, data.gyms);
+    state.workouts = mergeArr(state.workouts, data.workouts);
+    state.sessions = mergeArr(state.sessions, data.sessions);
+  }
+  closeModal();
+  toast('Backup importado com sucesso.','success');
+  renderView(state.view);
+}
+
+/* ============================== MODAL ============================= */
+function openModal(html){
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-backdrop" onclick="if(event.target===this) closeModal()"><div class="modal">${html}</div></div>`;
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+/* ============================== UTIL ============================= */
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* ============================== THEME ============================= */
+function initTheme(){
+  const saved = localStorage.getItem('ferroficha_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('theme-toggle').textContent = saved==='dark' ? '🌙' : '☀️';
+  document.getElementById('theme-toggle').onclick = ()=>{
+    const curr = document.documentElement.getAttribute('data-theme');
+    const next = curr==='dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('ferroficha_theme', next);
+    document.getElementById('theme-toggle').textContent = next==='dark' ? '🌙' : '☀️';
+    if(state.view==='stats') renderStats();
+  };
+}
+
+/* ============================== INIT ============================= */
+/* Fichas salvas em versões antigas do app tinham um único peso/reps para
+   todo o exercício (plannedSets: número, plannedReps, plannedLoad). Aqui a
+   gente converte isso, uma vez só, para a lista de séries independentes. */
+function normalizeWorkoutsArray(workouts){
+  let changed = false;
+  workouts.forEach(w=>{
+    (w.exercises||[]).forEach(ex=>{
+      if(!Array.isArray(ex.plannedSets)){
+        const count = ex.plannedSets || 1;
+        const reps = ex.plannedReps || 10;
+        const weight = ex.plannedLoad || '';
+        ex.plannedSets = Array.from({length:count},()=>({reps,weight}));
+        delete ex.plannedReps; delete ex.plannedLoad;
+        changed = true;
+      }
+    });
+  });
+  return changed;
+}
+async function migrateOldWorkouts(){
+  if(normalizeWorkoutsArray(state.workouts)){
+    await Data.putAll('workouts', state.workouts);
+  }
+}
+
+async function init(){
+  buildViewShells();
+  renderTabs();
+  initTheme();
+  try{
+    state.gyms = await Data.getAll('gyms');
+    state.workouts = await Data.getAll('workouts');
+    state.sessions = await Data.getAll('sessions');
+    await migrateOldWorkouts();
+  }catch(err){
+    toast('Erro ao abrir o banco de dados local.','error');
+    console.error(err);
+  }
+  const savedSession = localStorage.getItem('ferroficha_active_session');
+  if(savedSession){
+    try{ state.activeSession = JSON.parse(savedSession); }catch(e){}
+  }
+  navigate(state.activeSession ? 'session' : 'dashboard');
+}
+init();
 </script>
 </body>
 </html>
